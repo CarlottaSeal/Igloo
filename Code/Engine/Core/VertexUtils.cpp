@@ -74,6 +74,33 @@ AABB2 GetVertexBounds2D(const std::vector<Vertex_PCU>& verts)
 	return bounds;
 }
 
+AABB3 GetVertexBounds3D(const std::vector<Vertex_PCUTBN>& verts)
+{
+	if (verts.empty())
+		return AABB3();
+        
+	Vec3 minPos = verts[0].m_position;
+	Vec3 maxPos = verts[0].m_position;
+        
+	for (const auto& vertex : verts)
+	{
+		Vec3 pos = vertex.m_position;
+            
+		minPos.x = std::min(minPos.x, pos.x);
+		minPos.y = std::min(minPos.y, pos.y);
+		minPos.z = std::min(minPos.z, pos.z);
+            
+		maxPos.x = std::max(maxPos.x, pos.x);
+		maxPos.y = std::max(maxPos.y, pos.y);
+		maxPos.z = std::max(maxPos.z, pos.z);
+	}
+        
+	AABB3 bounds;
+	bounds.m_mins = minPos;
+	bounds.m_maxs = maxPos;
+	return bounds;
+}
+
 void AddVertsForDisc2D(std::vector<Vertex_PCU>& verts, Vec2 const& discCenter, float discRadius, Rgba8 const& color)
 {
 	const int numSides = 32;  
@@ -950,6 +977,50 @@ void AddVertsForIndexOBB3D(std::vector<Vertex_PCUTBN>& verts, std::vector<unsign
 		indexes.push_back(idx + 0);
 		indexes.push_back(idx + 2);
 		indexes.push_back(idx + 3);
+	}
+}
+
+void AddVertsForIndexAABBZWireframe3D(std::vector<Vertex_PCU>& verts, std::vector<unsigned int>& indices,
+	AABB3 const& bounds, Rgba8 const& tint)
+{
+	unsigned int baseIndex = static_cast<unsigned int>(verts.size());
+    
+	float x0 = bounds.m_mins.x;  // W
+	float x1 = bounds.m_maxs.x;  // E
+	float y0 = bounds.m_mins.y;  // S
+	float y1 = bounds.m_maxs.y;  // N
+	float z0 = bounds.m_mins.z;  
+	float z1 = bounds.m_maxs.z;  
+	
+	verts.push_back(Vertex_PCU(Vec3(x0, y0, z0), tint, Vec2(0, 0))); // 0
+	verts.push_back(Vertex_PCU(Vec3(x1, y0, z0), tint, Vec2(0, 0))); // 1
+	verts.push_back(Vertex_PCU(Vec3(x1, y1, z0), tint, Vec2(0, 0))); // 2
+	verts.push_back(Vertex_PCU(Vec3(x0, y1, z0), tint, Vec2(0, 0))); // 3
+	verts.push_back(Vertex_PCU(Vec3(x0, y0, z1), tint, Vec2(0, 0))); // 4
+	verts.push_back(Vertex_PCU(Vec3(x1, y0, z1), tint, Vec2(0, 0))); // 5
+	verts.push_back(Vertex_PCU(Vec3(x1, y1, z1), tint, Vec2(0, 0))); // 6
+	verts.push_back(Vertex_PCU(Vec3(x0, y1, z1), tint, Vec2(0, 0))); // 7
+    
+	unsigned int edgeIndices[24] = {
+		0, 1,  
+		1, 2,  
+		2, 3,  
+		3, 0,  
+		
+		4, 5, 
+		5, 6, 
+		6, 7, 
+		7, 4, 
+        
+		0, 4,  
+		1, 5,  
+		2, 6,  
+		3, 7   
+	};
+    
+	for (int i = 0; i < 24; i++)
+	{
+		indices.push_back(baseIndex + edgeIndices[i]);
 	}
 }
 

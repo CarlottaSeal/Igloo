@@ -20,18 +20,22 @@ public:
 
     bool IsOtherElementHavingFocus() const;
 
-    const AABB2& GetBounds() const {return m_bound;}
+    const AABB2& GetBounds() const { return m_bound; }
+    const ElementType GetType() const { return m_type; }
 
-    void SetEnabled(bool enabled);
+    virtual void SetEnabled(bool enabled);
     void SetFocused(bool focused);
+    void SetInteractive(bool isInteractive);
     bool IsEnabled();
+    bool IsInteractive();
     bool HasFocus();
+    void ResetStatus(); //except enabled
 
     void InitializeVerts();
     
 protected:
     UIElement* m_parent;
-    //Widget* m_parentWidget;
+    ElementType m_type;
     std::vector<UIElement*> m_children;
 
     AABB2 m_bound;
@@ -41,8 +45,10 @@ protected:
 
     Rgba8 m_renderedColor;
     Rgba8 m_originalColor = Rgba8::GREY;
+    Rgba8 m_hoveredColor = Rgba8::GREY;
 
-    bool m_interactive = true;
+    bool m_isInteractive = true;
     bool m_isEnabled = true;
     bool m_isFocused = false;
+    bool m_isHovered = false;
 };

@@ -15,6 +15,7 @@ public:
 	Image();
 	Image(char const* imageFilePath);
 	Image(IntVec2 size, Rgba8 color);
+	Image(unsigned char* pixelData, int width, int height, int channels);
 	~Image();
 
 	std::string const& GetImageFilePath() const;
@@ -23,6 +24,8 @@ public:
 	void SetTexelColor(IntVec2 const& texelCoords, Rgba8 const& newColor);
 
 	const void* GetRawData() const;
+
+	void SetName(std::string name);
 
 private:
 	std::string m_imageFilePath;

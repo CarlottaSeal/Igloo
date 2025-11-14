@@ -34,7 +34,6 @@ protected:
 #ifdef ENGINE_DX12_RENDERER
 	ID3D12Resource* m_dx12Texture = nullptr;
 	ID3D12Resource* m_textureBufferUploadHeap = nullptr;
-
-	int m_textureIndex = -1;
+	int m_textureDescIndex = -1;
 #endif
 };

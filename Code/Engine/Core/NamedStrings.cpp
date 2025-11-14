@@ -118,3 +118,33 @@ void NamedStrings::DebugPrintContents() const
 		printf("%s = %s\n", pair.first.c_str(), pair.second.c_str());
 	}
 }
+
+std::string NamedStrings::AppendToString()
+{
+	std::string result;
+	for (const auto& pair : m_keyValuePairs)
+	{
+		if (!result.empty())
+		{
+			result += " ";
+		}
+		result += pair.first + "=";
+
+		const std::string& value = pair.second;
+		bool needsQuotes = value.find(' ') != std::string::npos || value.find('\"') != std::string::npos;
+
+		if (needsQuotes)
+		{
+			result += "\"" + value + "\"";
+		} else
+		{
+			result += value;
+		}
+	}
+	return result;
+}
+
+bool NamedStrings::Has(const std::string& key) const
+{
+	return m_keyValuePairs.find(key) != m_keyValuePairs.end();
+}

@@ -6,7 +6,7 @@ class Button : public UIElement
 public:
     Button();
     Button(Widget* parent, AABB2 bound, Rgba8 hoveredColor = Rgba8::MAGENTA,Rgba8 textColor = Rgba8::TEAL, std::string onClickEvent = "",
-        std::string text = "NO TEXT", Vec2 textAlignment = Vec2(0.5f, 0.5f));
+        std::string text = "NO TEXT", Vec2 textAlignment = Vec2(0.5f, 0.5f), std::string texturePath = "");
     
     virtual ~Button() override;
 
@@ -26,10 +26,11 @@ public:
 public:
     Widget* m_parent;  //复写m_parent，指定只能有widget作为parent
     std::string m_onClickEventName;
-    bool m_isHovered = false;
+    //bool m_isHovered = false;
 
     std::string m_displayText;
+
+    Texture* m_texture;
     
-    Rgba8 m_hoveredColor = Rgba8::GREY;
     Rgba8 m_textColor;
 };

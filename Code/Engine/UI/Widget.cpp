@@ -14,6 +14,7 @@ Widget::Widget(Camera renderCamera, AABB2 bounds, std::string onClickEvent, Rgba
         ,m_onClickEvent(onClickEvent)
         ,m_textBox(textBox)
 {
+    m_type = WIDGET;
     //m_originalColor = originalColor;
 
     //SetOnClickEvent(onClickEvent);
@@ -32,6 +33,7 @@ Widget::Widget(UIElement* myParent, Camera renderCamera, AABB2 bounds, std::stri
         ,m_onClickEvent(onClickEvent)
         ,m_textBox(textBox)
 {
+    m_type = WIDGET;
     m_parent = myParent;
     m_originalColor = textColor;
     //SetOnClickEvent(onClickEvent);
@@ -49,7 +51,7 @@ Widget::~Widget()
 
 void Widget::Update()
 {
-    if (m_enabled)
+    if (m_isEnabled)
     {
         //if (g_theUISystem->GetInputSystem()->WasKeyJustPressed())
         UpdateIfClicked();
@@ -62,8 +64,8 @@ void Widget::Update()
 
 void Widget::Render() const
 {
-    /*if (this->IsEnabled() || !m_parent)
-    {*/
+    if (m_isEnabled)
+    {
         g_theUISystem->GetRenderer()->BeginCamera(m_renderCamera);
         g_theUISystem->GetRenderer()->SetBlendMode(BlendMode::ALPHA);
         g_theUISystem->GetRenderer()->SetRasterizerMode(RasterizerMode::SOLID_CULL_NONE);
@@ -78,13 +80,21 @@ void Widget::Render() const
         {
             child->Render();
         }
-    //}
+    }
 }
 
-Widget& Widget::SetEnabled(bool enabled)
+void Widget::SetEnabled(bool enabled)
 {
-    m_enabled = enabled;
-    return *this;
+    m_isEnabled = enabled;
+    if (enabled)
+    {
+        m_isInteractive = false;
+        g_theUISystem->QueueEnableInputNextFrame(this); // 延迟一帧启用交互
+    }
+    else
+    {
+        m_isInteractive = false;
+    }
 }
 
 Widget& Widget::SetBounds(const AABB2& localBounds)
@@ -106,6 +116,15 @@ Widget& Widget::SetText(const char* text, BitmapFont* font, const Rgba8& color, 
     UNUSED(color);
     UNUSED(height);
     return *this;
+}
+
+void Widget::Reset()
+{
+    ResetStatus();
+    for (auto* child : m_children)
+    {
+        child->ResetStatus();
+    }
 }
 
 void Widget::AddChild(UIElement& uiElement)

@@ -2,6 +2,8 @@
 #include "UIElement.h"
 #include "Engine/Core/EngineCommon.hpp"
 
+UISystem* g_theUISystem = nullptr;
+
 UISystem::UISystem(UIConfig config)
     : m_config(config)
 {
@@ -26,15 +28,47 @@ void UISystem::Shutdown()
 
 void UISystem::BeginFrame()
 {
+    for (UIElement* u : m_widgetsToEnableInputNextFrame)
+    {
+        if (u)
+        {
+            u->SetInteractive(true);
+        }
+    }
+    m_widgetsToEnableInputNextFrame.clear();
 }
 
 void UISystem::EndFrame()
 {
 }
 
-void UISystem::SetCamera(Camera* camera)
+void UISystem::SetCamera(Camera camera)
 {
-    UNUSED(camera);
+    m_currentCamera = camera;
+}
+
+void UISystem::QueueEnableInputNextFrame(UIElement* widget) //这个函数应该只适用于widget（即canvas）
+{
+    if (widget != nullptr)
+    {
+        if (std::find(m_widgetsToEnableInputNextFrame.begin(), m_widgetsToEnableInputNextFrame.end(), widget) == m_widgetsToEnableInputNextFrame.end())
+        {
+            m_widgetsToEnableInputNextFrame.push_back(widget);
+        }
+    }
+}
+
+bool UISystem::HasWidgetOpened()
+{
+    for (UIElement* element : m_uiElements)
+    {
+        if (element->GetType() == WIDGET)
+        {
+            if (element->IsEnabled())
+                return true;
+        }
+    }
+    return false;
 }
 
 Window* UISystem::GetWindow()
@@ -57,7 +91,7 @@ BitmapFont* UISystem::GetBitmapFont()
     return m_bitmapFont;
 }
 
-Camera* UISystem::GetCamera()
+Camera UISystem::GetCamera()
 {
-    return nullptr;
+    return m_currentCamera;
 }

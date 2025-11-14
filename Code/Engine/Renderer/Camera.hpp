@@ -2,6 +2,7 @@
 #include "Engine/Math/AABB2.hpp"
 #include "Engine/Math/Vec2.hpp"
 #include "Engine/Math/EulerAngles.hpp"
+#include "Engine/Math/Frustum.h"
 
 class Camera 
 {
@@ -44,11 +45,17 @@ public:
 
     AABB2 MakePlayerViewport(int numOfPlayers, int playerIndex = 0) const;
 
-protected:
-    //Vec2 m_bottomLeft;
-    //Vec2 m_topRight;
+    void SetNewAspectRatio(float newAspect, float targetOrthoHeight);
+    
+    //void SetOrthoCenter(const Vec2& center);
+    Vec2 GetOrthographicCenter() const;
 
+	Frustum GetFrustum() const;
+	void UpdateFrustum();
+
+protected:
     CameraMode m_mode = eMode_OrthoGraphic;
+    Frustum m_frustum;
     
     Vec3 m_position;
     EulerAngles m_orientation;

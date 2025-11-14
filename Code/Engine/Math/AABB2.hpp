@@ -8,12 +8,11 @@ public:
 	Vec2 m_maxs;
 
 public:
-	//Construction/Destruction
-	AABB2();					// constructor do nothing
-	~AABB2();					//destructor do nothing
-	AABB2(AABB2 const& copyFrom);		//copy constructor from another vec2
-	explicit AABB2(float minX, float minY, float maxX, float maxY);      //explicit constructor (from x1 y1 x2 y2)
-	explicit AABB2(Vec2 const& mins, Vec2 const& maxs);					//explicit constructor (from mins, maxs)
+	AABB2();					
+	~AABB2();					
+	AABB2(AABB2 const& copyFrom);	
+	explicit AABB2(float minX, float minY, float maxX, float maxY);     
+	explicit AABB2(Vec2 const& mins, Vec2 const& maxs);					
 
 	//Accessors (const methods)
 	bool IsPointInside(Vec2 const& point) const;

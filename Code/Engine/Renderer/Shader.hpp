@@ -25,7 +25,7 @@ class Shader
 	friend class DX11Renderer;
 	friend class DX12Renderer;
 
-public:
+private:
 	Shader(const ShaderConfig& config);
 	Shader(const Shader& copy) = delete;
 	~Shader();

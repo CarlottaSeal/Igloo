@@ -23,9 +23,6 @@
     <Filter Include="ThirdParty\fmod">
       <UniqueIdentifier>{fb3125ca-a38b-4134-a2aa-ef013d36f395}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Window">
-      <UniqueIdentifier>{fcdc3b1a-865f-4e48-81c0-6905d57a3101}</UniqueIdentifier>
-    </Filter>
     <Filter Include="ThirdParty\stb">
       <UniqueIdentifier>{165d0812-dc73-4c89-bcdc-b8b0d91a4ff5}</UniqueIdentifier>
     </Filter>
@@ -34,6 +31,42 @@
     </Filter>
     <Filter Include="UI">
       <UniqueIdentifier>{275e2286-b01e-456c-88c4-d7b9c9ca4308}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ThirdParty\ImGui">
+      <UniqueIdentifier>{ba42837e-1e0b-49a8-86f4-c1e49fe983cb}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Window">
+      <UniqueIdentifier>{0906350a-4e42-41c6-921e-a9eee2b2b5b2}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Renderer\Cache">
+      <UniqueIdentifier>{ec2f706e-23fd-4471-8751-794e85bd85d9}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Renderer\GI">
+      <UniqueIdentifier>{50cc159c-46c5-4c56-83e2-519e3fd11d83}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Scene">
+      <UniqueIdentifier>{6516dda1-0017-42b5-864d-489c3b2cca4b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Renderer\DXR">
+      <UniqueIdentifier>{76c6bc1b-a72d-41a4-a0c0-aad2042e183d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Scene\Object">
+      <UniqueIdentifier>{64a50b26-87de-4f90-a445-eeabfd4a7e33}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Scene\Object\Light">
+      <UniqueIdentifier>{2ea7659a-0d65-4a3a-bc8a-80cdb11ff20e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Scene\Object\Mesh">
+      <UniqueIdentifier>{c78428a6-b556-4db4-83bc-5035370a637b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Save">
+      <UniqueIdentifier>{25eac6de-31a8-4220-ae65-5d45871a16a9}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Job">
+      <UniqueIdentifier>{85e50430-e000-406f-9936-83dbd99c7d8d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Scene\SDF">
+      <UniqueIdentifier>{fdc08655-6674-46b1-a919-b612e820ec40}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -121,9 +154,6 @@
     <ClCompile Include="Renderer\SpriteSheet.cpp">
       <Filter>Renderer</Filter>
     </ClCompile>
-    <ClCompile Include="Window\Window.cpp">
-      <Filter>Window</Filter>
-    </ClCompile>
     <ClCompile Include="Math\Mat44.cpp">
       <Filter>Math</Filter>
     </ClCompile>
@@ -165,9 +195,6 @@
     </ClCompile>
     <ClCompile Include="Core\FileUtils.cpp">
       <Filter>Core</Filter>
-    </ClCompile>
-    <ClCompile Include="Renderer\DefaultShadfer.cpp">
-      <Filter>Renderer</Filter>
     </ClCompile>
     <ClCompile Include="Renderer\ConstantBuffer.cpp">
       <Filter>Renderer</Filter>
@@ -224,6 +251,126 @@
       <Filter>UI</Filter>
     </ClCompile>
     <ClCompile Include="Renderer\DX11Renderer.cpp">
+      <Filter>Renderer</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\NetworkSystem.cpp">
+      <Filter>Core</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\StaticMesh.cpp">
+      <Filter>Core</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\StaticMeshUtils.cpp">
+      <Filter>Core</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ThirdParty\ImGui\imgui.cpp">
+      <Filter>ThirdParty\ImGui</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ThirdParty\ImGui\imgui_demo.cpp">
+      <Filter>ThirdParty\ImGui</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ThirdParty\ImGui\imgui_draw.cpp">
+      <Filter>ThirdParty\ImGui</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ThirdParty\ImGui\imgui_impl_dx12.cpp">
+      <Filter>ThirdParty\ImGui</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ThirdParty\ImGui\imgui_impl_win32.cpp">
+      <Filter>ThirdParty\ImGui</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ThirdParty\ImGui\imgui_tables.cpp">
+      <Filter>ThirdParty\ImGui</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ThirdParty\ImGui\imgui_widgets.cpp">
+      <Filter>ThirdParty\ImGui</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ThirdParty\ImGui\implot.cpp">
+      <Filter>ThirdParty\ImGui</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ThirdParty\ImGui\imgui_impl_dx11.cpp">
+      <Filter>ThirdParty\ImGui</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ThirdParty\ImGui\implot_items.cpp">
+      <Filter>ThirdParty\ImGui</Filter>
+    </ClCompile>
+    <ClCompile Include="Window\Window.cpp">
+      <Filter>Window</Filter>
+    </ClCompile>
+    <ClCompile Include="Renderer\Cache\SurfaceCache.cpp">
+      <Filter>Renderer\Cache</Filter>
+    </ClCompile>
+    <ClCompile Include="Renderer\Cache\RadianceCache.cpp">
+      <Filter>Renderer\Cache</Filter>
+    </ClCompile>
+    <ClCompile Include="Renderer\GI\GBufferData.cpp">
+      <Filter>Renderer\GI</Filter>
+    </ClCompile>
+    <ClCompile Include="Renderer\DXR\DXRAcceleration.cpp">
+      <Filter>Renderer\DXR</Filter>
+    </ClCompile>
+    <ClCompile Include="Scene\BVH.cpp">
+      <Filter>Scene</Filter>
+    </ClCompile>
+    <ClCompile Include="Scene\Scene.cpp">
+      <Filter>Scene</Filter>
+    </ClCompile>
+    <ClCompile Include="Scene\Object\SceneObject.cpp">
+      <Filter>Scene\Object</Filter>
+    </ClCompile>
+    <ClCompile Include="Scene\Object\Light\LightObject.cpp">
+      <Filter>Scene\Object\Light</Filter>
+    </ClCompile>
+    <ClCompile Include="Scene\Object\Mesh\MeshObject.cpp">
+      <Filter>Scene\Object\Mesh</Filter>
+    </ClCompile>
+    <ClCompile Include="Scene\Object\Mesh\MeshManager.cpp">
+      <Filter>Scene\Object\Mesh</Filter>
+    </ClCompile>
+    <ClCompile Include="Math\Sphere.cpp">
+      <Filter>Math</Filter>
+    </ClCompile>
+    <ClCompile Include="Math\IntVec3.cpp">
+      <Filter>Math</Filter>
+    </ClCompile>
+    <ClCompile Include="Save\DataStorage.cpp">
+      <Filter>Save</Filter>
+    </ClCompile>
+    <ClCompile Include="Save\ISerializable.cpp">
+      <Filter>Save</Filter>
+    </ClCompile>
+    <ClCompile Include="Save\RLECompression.cpp">
+      <Filter>Save</Filter>
+    </ClCompile>
+    <ClCompile Include="Save\SaveSystem.cpp">
+      <Filter>Save</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ThirdParty\Noise\SmoothNoise.cpp">
+      <Filter>Core</Filter>
+    </ClCompile>
+    <ClCompile Include="Renderer\GI\GISystem.cpp">
+      <Filter>Renderer\GI</Filter>
+    </ClCompile>
+    <ClCompile Include="Math\Frustum.cpp">
+      <Filter>Math</Filter>
+    </ClCompile>
+    <ClCompile Include="Job\JobSystem.cpp">
+      <Filter>Job</Filter>
+    </ClCompile>
+    <ClCompile Include="Renderer\Cache\SurfaceCardGenerator.cpp">
+      <Filter>Renderer\Cache</Filter>
+    </ClCompile>
+    <ClCompile Include="Math\IntVec4.cpp">
+      <Filter>Math</Filter>
+    </ClCompile>
+    <ClCompile Include="Scene\SDF\SDFGenerator.cpp">
+      <Filter>Scene\SDF</Filter>
+    </ClCompile>
+    <ClCompile Include="Renderer\Cache\SurfaceCard.cpp">
+      <Filter>Renderer\Cache</Filter>
+    </ClCompile>
+    <ClCompile Include="Renderer\SDFTexture3D.cpp">
+      <Filter>Renderer</Filter>
+    </ClCompile>
+    <ClCompile Include="Renderer\RenderCommon.cpp">
       <Filter>Renderer</Filter>
     </ClCompile>
   </ItemGroup>
@@ -333,9 +480,6 @@
     <ClInclude Include="Renderer\SpriteSheet.hpp">
       <Filter>Renderer</Filter>
     </ClInclude>
-    <ClInclude Include="Window\Window.hpp">
-      <Filter>Window</Filter>
-    </ClInclude>
     <ClInclude Include="Math\Mat44.hpp">
       <Filter>Math</Filter>
     </ClInclude>
@@ -443,6 +587,141 @@
     </ClInclude>
     <ClInclude Include="Renderer\DX11Renderer.hpp">
       <Filter>Renderer</Filter>
+    </ClInclude>
+    <ClInclude Include="Core\NetworkSystem.h">
+      <Filter>Core</Filter>
+    </ClInclude>
+    <ClInclude Include="Core\StaticMesh.h">
+      <Filter>Core</Filter>
+    </ClInclude>
+    <ClInclude Include="Core\StaticMeshUtils.h">
+      <Filter>Core</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ThirdParty\ImGui\imconfig.h">
+      <Filter>ThirdParty\ImGui</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ThirdParty\ImGui\imgui.h">
+      <Filter>ThirdParty\ImGui</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ThirdParty\ImGui\imgui_impl_dx11.h">
+      <Filter>ThirdParty\ImGui</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ThirdParty\ImGui\imgui_impl_dx12.h">
+      <Filter>ThirdParty\ImGui</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ThirdParty\ImGui\imgui_impl_win32.h">
+      <Filter>ThirdParty\ImGui</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ThirdParty\ImGui\imgui_internal.h">
+      <Filter>ThirdParty\ImGui</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ThirdParty\ImGui\implot.h">
+      <Filter>ThirdParty\ImGui</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ThirdParty\ImGui\implot_internal.h">
+      <Filter>ThirdParty\ImGui</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ThirdParty\ImGui\imstb_rectpack.h">
+      <Filter>ThirdParty\ImGui</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ThirdParty\ImGui\imstb_textedit.h">
+      <Filter>ThirdParty\ImGui</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ThirdParty\ImGui\imstb_truetype.h">
+      <Filter>ThirdParty\ImGui</Filter>
+    </ClInclude>
+    <ClInclude Include="Window\Window.hpp">
+      <Filter>Window</Filter>
+    </ClInclude>
+    <ClInclude Include="Renderer\Cache\SurfaceCache.h">
+      <Filter>Renderer\Cache</Filter>
+    </ClInclude>
+    <ClInclude Include="Renderer\Cache\RadianceCache.h">
+      <Filter>Renderer\Cache</Filter>
+    </ClInclude>
+    <ClInclude Include="Renderer\GI\GBufferData.h">
+      <Filter>Renderer\GI</Filter>
+    </ClInclude>
+    <ClInclude Include="Renderer\GI\DefaultGBufferShader.h">
+      <Filter>Renderer\GI</Filter>
+    </ClInclude>
+    <ClInclude Include="Renderer\DXR\DXRAcceleration.h">
+      <Filter>Renderer\DXR</Filter>
+    </ClInclude>
+    <ClInclude Include="Scene\BVH.h">
+      <Filter>Scene</Filter>
+    </ClInclude>
+    <ClInclude Include="Scene\Scene.h">
+      <Filter>Scene</Filter>
+    </ClInclude>
+    <ClInclude Include="Scene\SceneCommon.h">
+      <Filter>Scene</Filter>
+    </ClInclude>
+    <ClInclude Include="Scene\Object\SceneObject.h">
+      <Filter>Scene\Object</Filter>
+    </ClInclude>
+    <ClInclude Include="Scene\Object\Light\LightObject.h">
+      <Filter>Scene\Object\Light</Filter>
+    </ClInclude>
+    <ClInclude Include="Scene\Object\Mesh\MeshObject.h">
+      <Filter>Scene\Object\Mesh</Filter>
+    </ClInclude>
+    <ClInclude Include="Scene\Object\Mesh\MeshManager.h">
+      <Filter>Scene\Object\Mesh</Filter>
+    </ClInclude>
+    <ClInclude Include="Math\Sphere.h">
+      <Filter>Math</Filter>
+    </ClInclude>
+    <ClInclude Include="Math\IntVec3.h">
+      <Filter>Math</Filter>
+    </ClInclude>
+    <ClInclude Include="Save\DataStorage.h">
+      <Filter>Save</Filter>
+    </ClInclude>
+    <ClInclude Include="Save\ISerializable.h">
+      <Filter>Save</Filter>
+    </ClInclude>
+    <ClInclude Include="Save\RLECompression.h">
+      <Filter>Save</Filter>
+    </ClInclude>
+    <ClInclude Include="Save\SaveCommon.h">
+      <Filter>Save</Filter>
+    </ClInclude>
+    <ClInclude Include="Save\SaveSystem.h">
+      <Filter>Save</Filter>
+    </ClInclude>
+    <ClInclude Include="Renderer\GI\GISystem.h">
+      <Filter>Renderer\GI</Filter>
+    </ClInclude>
+    <ClInclude Include="Math\Frustum.h">
+      <Filter>Math</Filter>
+    </ClInclude>
+    <ClInclude Include="Job\JobSystem.h">
+      <Filter>Job</Filter>
+    </ClInclude>
+    <ClInclude Include="Renderer\Cache\SurfaceCardGenerator.h">
+      <Filter>Renderer\Cache</Filter>
+    </ClInclude>
+    <ClInclude Include="Math\IntVec4.h">
+      <Filter>Math</Filter>
+    </ClInclude>
+    <ClInclude Include="Scene\SDF\SDFCommon.h">
+      <Filter>Scene\SDF</Filter>
+    </ClInclude>
+    <ClInclude Include="Scene\SDF\SDFGenerator.h">
+      <Filter>Scene\SDF</Filter>
+    </ClInclude>
+    <ClInclude Include="Renderer\Cache\SurfaceCacheCommon.h">
+      <Filter>Renderer\Cache</Filter>
+    </ClInclude>
+    <ClInclude Include="Renderer\Cache\SurfaceCard.h">
+      <Filter>Renderer\Cache</Filter>
+    </ClInclude>
+    <ClInclude Include="Renderer\SDFTexture3D.h">
+      <Filter>Renderer</Filter>
+    </ClInclude>
+    <ClInclude Include="Core\EngineConfig.h">
+      <Filter>Core</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

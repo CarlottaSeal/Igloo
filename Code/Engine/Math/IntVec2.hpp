@@ -1,4 +1,5 @@
 #pragma once
+#include <functional>   
 
 struct IntVec2
 {
@@ -40,4 +41,18 @@ public:
 
 	bool operator == (const IntVec2& other) const;
 	bool operator != (const IntVec2& other) const;
+
+	bool operator<(const IntVec2& rhs) const;
 };
+
+namespace std
+{
+	template<>
+	struct hash<IntVec2>
+	{
+		size_t operator()(const IntVec2& v) const
+		{
+			return hash<int>()(v.x) ^ (hash<int>()(v.y) << 1);
+		}
+	};
+}

@@ -17,6 +17,7 @@ void TransformVertexArray3D(int numVerts, Vertex_PCU* verts, float scale, float 
 void TransformVertexArray3D(std::vector<Vertex_PCU>& verts, const Mat44& transform);
 
 AABB2 GetVertexBounds2D(const std::vector<Vertex_PCU>& verts);
+AABB3 GetVertexBounds3D(const std::vector<Vertex_PCUTBN>& verts);
 
 void AddVertsForDisc2D(std::vector<Vertex_PCU>& verts, Vec2 const& discCenter, float discRadius, Rgba8 const& color);
 void AddVertsForAABB2D(std::vector<Vertex_PCU>& verts, AABB2 const& alignedBox, Rgba8 const& color, AABB2 uv);
@@ -77,6 +78,11 @@ void AddVertsForIndexAABB3D(std::vector<Vertex_PCUTBN>& vertexes, std::vector<un
 	const Rgba8& color = Rgba8::WHITE, const AABB2& UVs = AABB2::ZERO_TO_ONE);
 void AddVertsForIndexOBB3D(std::vector<Vertex_PCUTBN>& verts, std::vector<unsigned int>& indexes, const OBB3& cube,
 	const Rgba8& color = Rgba8::WHITE, const AABB2& UVs = AABB2::ZERO_TO_ONE);
+
+void AddVertsForIndexAABBZWireframe3D(std::vector<Vertex_PCU>& verts, 
+								  std::vector<unsigned int>& indices,
+								  AABB3 const& bounds, 
+								  Rgba8 const& tint = Rgba8::WHITE);
 
 void CalculateTangentAndBiTangent(std::vector<Vertex_PCUTBN>& vertices, const std::vector<unsigned int>& indices);
 

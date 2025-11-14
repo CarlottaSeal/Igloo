@@ -95,8 +95,14 @@ void DebugObject::UpdateScreenObjects()
 
 void DebugObject::RenderWorldObjects(Camera const& camera, Renderer* renderer) const
 {
+#ifdef ENGINE_DX11_RENDERER
     renderer->BindTexture(nullptr);
+#endif
+#ifdef ENGINE_DX12_RENDERER
+	renderer->SetMaterialConstants();
+#endif
     renderer->SetBlendMode(BlendMode::ALPHA);
+    renderer->BindShader(nullptr);
     
     if (m_mode == DebugRenderMode::USE_DEPTH)
     {
@@ -113,7 +119,12 @@ void DebugObject::RenderWorldObjects(Camera const& camera, Renderer* renderer) c
         {
             if (m_isText)
             {
+#ifdef ENGINE_DX11_RENDERER
                 renderer->BindTexture(&m_textFont->GetTexture());
+#endif
+#ifdef ENGINE_DX12_RENDERER
+            	renderer->SetMaterialConstants();
+#endif
                 renderer->SetRasterizerMode(RasterizerMode::SOLID_CULL_NONE);
             }    
             else
@@ -141,7 +152,12 @@ void DebugObject::RenderWorldObjects(Camera const& camera, Renderer* renderer) c
 		{
             if (m_isText)
             {
+#ifdef ENGINE_DX11_RENDERER
                 renderer->BindTexture(&m_textFont->GetTexture());
+#endif
+            	#ifdef ENGINE_DX12_RENDERER
+            	renderer->SetMaterialConstants(&m_textFont->GetTexture());
+            	#endif
                 renderer->SetRasterizerMode(RasterizerMode::WIREFRAME_CULL_NONE);
             }
             else
@@ -151,7 +167,12 @@ void DebugObject::RenderWorldObjects(Camera const& camera, Renderer* renderer) c
 		{
             if (m_isText)
             {
+				#ifdef ENGINE_DX11_RENDERER
                 renderer->BindTexture(&m_textFont->GetTexture());
+				#endif
+            	#ifdef ENGINE_DX12_RENDERER
+            	renderer->SetMaterialConstants(&m_textFont->GetTexture());
+            	#endif
                 renderer->SetRasterizerMode(RasterizerMode::SOLID_CULL_NONE);
             }
             else
@@ -206,7 +227,12 @@ void DebugObject::RenderWorldObjects(Camera const& camera, Renderer* renderer) c
 		}*/
         if (m_isText)
         {
+			#ifdef ENGINE_DX11_RENDERER
             renderer->BindTexture(&m_textFont->GetTexture());
+			#endif
+        	#ifdef ENGINE_DX12_RENDERER
+        	renderer->SetMaterialConstants(&m_textFont->GetTexture());
+        	#endif
             renderer->SetRasterizerMode(RasterizerMode::SOLID_CULL_BACK);
         }
         else
@@ -219,7 +245,12 @@ void DebugObject::RenderWorldObjects(Camera const& camera, Renderer* renderer) c
     }
 
 	renderer->SetModelConstants();
-    renderer->BindTexture(nullptr);
+#ifdef ENGINE_DX11_RENDERER
+	renderer->BindTexture(nullptr);
+#endif
+#ifdef ENGINE_DX12_RENDERER
+	renderer->SetMaterialConstants();
+#endif
 	renderer->SetRasterizerMode(RasterizerMode::SOLID_CULL_BACK);
 	renderer->SetDepthMode(DepthMode::READ_WRITE_LESS_EQUAL);
 	renderer->SetBlendMode(BlendMode::ALPHA);
@@ -227,8 +258,13 @@ void DebugObject::RenderWorldObjects(Camera const& camera, Renderer* renderer) c
 
 void DebugObject::RenderScreenObjects(Camera const& camera, Renderer* renderer) const
 {
-    UNUSED(camera);
+    UNUSED(camera)
+	#ifdef ENGINE_DX11_RENDERER
     renderer->BindTexture(&m_textFont->GetTexture());
+	#endif
+	#ifdef ENGINE_DX12_RENDERER
+	renderer->SetMaterialConstants(&m_textFont->GetTexture());
+	#endif
 	renderer->BindShader(nullptr);
 	renderer->SetModelConstants();
     //Mat44 cameraMat = camera.GetOrientation().GetAsMatrix_IFwd_JLeft_KUp();
@@ -251,6 +287,8 @@ public:
     void RenderScreen(Camera const& screenCamera);
 
 public:
+	//mutable std::mutex m_mutex;
+	mutable std::recursive_mutex m_mutex;
     std::vector<DebugObject*> m_worldObjects;
     std::vector<DebugObject*> m_screenObjects;
 
@@ -261,6 +299,7 @@ public:
     bool m_isHidden = false;
 
     float m_messageLineHeight;
+	float m_messageStartX;
     float m_windowHeight;
 };
 
@@ -293,6 +332,8 @@ DebugRenderTool::~DebugRenderTool()
 
 void DebugRenderTool::Update()
 {
+	std::lock_guard<std::recursive_mutex> lock(m_mutex);
+	
 	for (DebugObject* object : m_worldObjects)
 	{
         object->UpdateWorldObjects();
@@ -311,7 +352,7 @@ void DebugRenderTool::Update()
 		message->m_verts.clear();
 
 		message->m_textFont->AddVertsForText2D(
-			message->m_verts, Vec2(0.f, currentY), m_messageLineHeight*0.7f, message->m_message, message->m_startColor
+			message->m_verts, Vec2(m_messageStartX, currentY), m_messageLineHeight*0.7f, message->m_message, message->m_startColor
 		);
 
 		currentY -= m_messageLineHeight;
@@ -322,6 +363,11 @@ void DebugRenderTool::RenderWorld(Camera const& worldCamera)
 {
     if (!m_isHidden)
     {
+    	std::lock_guard<std::recursive_mutex> lock(m_mutex);
+
+#ifdef ENGINE_DX12_RENDERER
+        m_debugRenderConfig.m_renderer->SetRenderMode(RenderMode::FORWARD);
+#endif
 		m_debugRenderConfig.m_renderer->BeginCamera(worldCamera);
 		for (DebugObject* object : m_worldObjects)
 		{
@@ -335,6 +381,9 @@ void DebugRenderTool::RenderScreen(Camera const& screenCamera)
 {
     if (!m_isHidden)
     {
+#ifdef ENGINE_DX12_RENDERER
+		m_debugRenderConfig.m_renderer->SetRenderMode(RenderMode::FORWARD);
+#endif
         m_debugRenderConfig.m_renderer->BeginCamera(screenCamera);
         for (DebugObject* object : m_screenObjects)
         {
@@ -389,6 +438,8 @@ void DebugRenderClear()
 {
     if (g_theDebugRenderTool)
     {
+    	std::lock_guard<std::recursive_mutex> lock(g_theDebugRenderTool->m_mutex);
+    	
         for (DebugObject* object : g_theDebugRenderTool->m_worldObjects)
         {
             delete object;
@@ -434,6 +485,8 @@ void DebugRenderEndFrame()
 {
     if (g_theDebugRenderTool)
     {
+    	std::lock_guard<std::recursive_mutex> lock(g_theDebugRenderTool->m_mutex);
+    	
 		auto& worldObjects = g_theDebugRenderTool->m_worldObjects;
 
 		for (auto iter = worldObjects.begin(); iter != worldObjects.end();)
@@ -485,7 +538,10 @@ void DebugAddWorldPoint(const Vec3& pos, float radius, float duration, const Rgb
 {
     DebugObject* point = new DebugObject(duration, startColor, endColor, mode);
     AddVertsForSphere3D(point->m_verts, pos, radius, startColor);
-    g_theDebugRenderTool->m_worldObjects.push_back(point);
+    {
+    	std::lock_guard<std::recursive_mutex> lock(g_theDebugRenderTool->m_mutex);
+    	g_theDebugRenderTool->m_worldObjects.push_back(point);
+    }
     point->m_timer->Start();
 }
 
@@ -493,7 +549,10 @@ void DebugAddWorldLine(const Vec3& start, const Vec3& end, float radius, float d
 {
 	DebugObject* line = new DebugObject(duration, startColor, endColor, mode);
     AddVertsForCylinder3D(line->m_verts, start, end, radius);
-    g_theDebugRenderTool->m_worldObjects.push_back(line);
+	{
+		std::lock_guard<std::recursive_mutex> lock(g_theDebugRenderTool->m_mutex);
+		g_theDebugRenderTool->m_worldObjects.push_back(line);
+	}
     line->m_timer->Start();
 }
 
@@ -502,7 +561,10 @@ void DebugAddWorldWireCylinder(const Vec3& base, const Vec3& top, float radius, 
     DebugObject* wireCylinder = new DebugObject(duration, startColor, endColor, mode);
     AddVertsForCylinder3D(wireCylinder->m_verts, base, top, radius);
     wireCylinder->m_isWireFrame = true;
-    g_theDebugRenderTool->m_worldObjects.push_back(wireCylinder);
+	{
+		std::lock_guard<std::recursive_mutex> lock(g_theDebugRenderTool->m_mutex);
+    	g_theDebugRenderTool->m_worldObjects.push_back(wireCylinder);
+	}
     wireCylinder->m_timer->Start();
 }
 
@@ -511,7 +573,10 @@ void DebugAddWorldWireSphere(const Vec3& center, float radius, float duration, c
     DebugObject* wireSphere = new DebugObject(duration, startColor, endColor, mode);
     AddVertsForSphere3D(wireSphere->m_verts, center, radius);
     wireSphere->m_isWireFrame = true;
-    g_theDebugRenderTool->m_worldObjects.push_back(wireSphere);
+	{
+		std::lock_guard<std::recursive_mutex> lock(g_theDebugRenderTool->m_mutex);
+    	g_theDebugRenderTool->m_worldObjects.push_back(wireSphere);
+	}
     wireSphere->m_timer->Start();
 }
 
@@ -519,7 +584,10 @@ void DebugAddWorldArrow(const Vec3& start, const Vec3& end, float radius, float 
 {
     DebugObject* arrow = new DebugObject(duration, startColor, endColor, mode);
     AddVertsForArrow3D(arrow->m_verts, start, end, radius, startColor);
-    g_theDebugRenderTool->m_worldObjects.push_back(arrow);
+	{
+		std::lock_guard<std::recursive_mutex> lock(g_theDebugRenderTool->m_mutex);
+    	g_theDebugRenderTool->m_worldObjects.push_back(arrow);
+	}
     arrow->m_timer->Start();
 }
 
@@ -531,8 +599,11 @@ void DebugAddWorldText(const std::string& text, const Mat44& transform, float te
 	textToWrite->m_textFont->AddVertsForText3DAtOriginXForward(textToWrite->m_verts, textHeight, text, startColor, 1.f, alignment);
 	
 	TransformVertexArray3D(textToWrite->m_verts, transform);
-	g_theDebugRenderTool->m_worldObjects.push_back(textToWrite);
-	textToWrite->m_timer->Start();                //????
+	{
+		std::lock_guard<std::recursive_mutex> lock(g_theDebugRenderTool->m_mutex);
+		g_theDebugRenderTool->m_worldObjects.push_back(textToWrite);
+	}
+	textToWrite->m_timer->Start();        
 }
 
 void DebugAddWorldBillboardText(const std::string& text, const Vec3& origin, float textHeight, const Vec2& alignment, float duration, const Rgba8& startColor, DebugRenderMode mode)
@@ -548,7 +619,10 @@ void DebugAddWorldBillboardText(const std::string& text, const Vec3& origin, flo
 	/*Mat44 mat;
 	mat.SetTranslation3D(origin);*/
     //TransformVertexArray3D(textToWrite->m_verts, mat); //transform the verts' position so render() doesn't transform...??
-	g_theDebugRenderTool->m_worldObjects.push_back(textToWrite);
+	{
+		std::lock_guard<std::recursive_mutex> lock(g_theDebugRenderTool->m_mutex);
+		g_theDebugRenderTool->m_worldObjects.push_back(textToWrite);
+	}
 	textToWrite->m_timer->Start();               
 }
 
@@ -579,7 +653,10 @@ void DebugAddScreenText(const std::string& text, const Vec2& position, float siz
 	TransformVertexArray3D(textToWrite->m_verts, mat);*/
     textToWrite->m_textFont->AddVertsForText2D(textToWrite->m_verts, position, size, text, startColor);
     //textToWrite->m_textFont->AddVertsForTextInBox2D(textToWrite->m_verts, text, AABB2(position, position + Vec2(1.f, size)), size, startColor, 0.7f, alignment, OVERRUN);
-    g_theDebugRenderTool->m_screenObjects.push_back(textToWrite);
+	{
+		std::lock_guard<std::recursive_mutex> lock(g_theDebugRenderTool->m_mutex);
+    	g_theDebugRenderTool->m_screenObjects.push_back(textToWrite);
+	}
 	textToWrite->m_timer->Start();
 }
 
@@ -602,11 +679,12 @@ void DebugAddMessage(const std::string& text, float duration, Camera camera, con
     message->m_startColor = startColor;
     message->m_endColor = endColor;
 
-    Vec2 window = camera.GetOrthographicTopRight();
+    float windowHeight = camera.GetOrthographicTopRight().y - camera.GetOrthographicBottomLeft().y;
     float maxLines = 64.f;
-    float lineHeight = window.y/maxLines;
+    float lineHeight = windowHeight/maxLines;
     g_theDebugRenderTool->m_messageLineHeight = lineHeight;
-    g_theDebugRenderTool->m_windowHeight = window.y;  
+	g_theDebugRenderTool->m_messageStartX = camera.GetOrthographicBottomLeft().x;
+    g_theDebugRenderTool->m_windowHeight = camera.GetOrthographicTopRight().y;  
 	//float cellHeight = lineHeight * 0.7f;
 
 	//if (duration == 0.f)
@@ -620,7 +698,10 @@ void DebugAddMessage(const std::string& text, float duration, Camera camera, con
 
     //message->m_textFont->AddVertsForText2D(message->m_verts, Vec2(0.f, window.y - lineHeight * (g_theDebugRenderTool->m_messageObjects.size())), cellHeight, text, startColor);
 
-	g_theDebugRenderTool->m_screenObjects.push_back(message);
+	{
+		std::lock_guard<std::recursive_mutex> lock(g_theDebugRenderTool->m_mutex);
+    	g_theDebugRenderTool->m_screenObjects.push_back(message);
+	}
 	message->m_timer->Start();
 }
 

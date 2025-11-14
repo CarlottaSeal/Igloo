@@ -50,6 +50,9 @@ struct RaycastResult3D
 	Vec3 m_rayFwdNormal;
 	Vec3 m_rayStartPos;
 	float m_rayMaxLength = 1.f;
+
+	//New added: Object
+	uint32_t m_objectID;
 };
 
 //Angle utilities
@@ -114,6 +117,12 @@ Vec3 GetNearestPointOnCylinderZ(Vec3 const& referencePos, Vec2 const& centerXY, 
 Vec3 GetNearestPointOnSphere(Vec3 const& referencePos, Vec3 const& sphereCenter, float const& sphereRadius);
 Vec3 GetNearestPointOnOBB3D(Vec3 const& referencePos, OBB3 const& box);
 Vec3 GetNearestPointOnPlane3D(Vec3 const& referencePos, Plane3 const& plane);
+
+float DistanceSquaredPointToSegment(const Vec3& p, const Vec3& a, const Vec3& b);
+float DistanceToTriangle(const Vec3& p, const Vec3& a, 
+						   const Vec3& b, const Vec3& c);
+float DistanceSquaredToTriangle(const Vec3& p, const Vec3& a,
+	const Vec3& b, const Vec3& c);
 
 bool PushDiscOutOfFixedPoint2D(Vec2& mobileDiscCenter, float discRadius, Vec2 const& fixedPoint);
 bool PushDiscOutOfFixedDisc2D(Vec2& mobileDiscCenter, float mobileDiscRadius, Vec2 const& fixedDiscCenter, float fixedDiscRadius);
@@ -205,3 +214,23 @@ Vec3 GetRandomDirectionInSphere();
 
 //Others
 Vec3 GetPerpendicularUnitVector(Vec3 const& normal);
+
+//Data
+size_t AlignUp(size_t value, size_t alignment);
+
+int FloorDivision(int a, int b);
+int FloorToInt(float v);
+
+int GetEuclideanMod(int a, int b);
+
+//Comparison & numbers
+float MinF(float a, float b);
+float MaxF(float a, float b);
+float SignF(float x);
+int MinI(int a, int b);
+int MaxI(int a, int b);
+uint32_t MinUint32(uint32_t a, uint32_t b);
+uint32_t MaxUint32(uint32_t a, uint32_t b);
+float DiminishingAdd(float a, float b);
+float DiminishingAdd(float a, float b, float c);
+Vec3 DiminishingAdd(const Vec3& a, const Vec3& b);

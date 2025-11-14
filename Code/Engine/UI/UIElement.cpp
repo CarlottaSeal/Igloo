@@ -63,14 +63,32 @@ void UIElement::SetFocused(bool focused)
     m_isFocused = focused;
 }
 
+void UIElement::SetInteractive(bool isInteractive)
+{
+    m_isInteractive = isInteractive;
+}
+
 bool UIElement::IsEnabled()
 {
-    return m_isEnabled;
+    return m_isEnabled&&m_isInteractive;
+}
+
+bool UIElement::IsInteractive()
+{
+    return m_isInteractive;
 }
 
 bool UIElement::HasFocus()
 {
     return m_isFocused;
+}
+
+void UIElement::ResetStatus()
+{
+    m_isInteractive = true;
+    m_isFocused = false;
+    m_isHovered = false;
+    m_renderedColor = m_originalColor;
 }
 
 void UIElement::InitializeVerts()

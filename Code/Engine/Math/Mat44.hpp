@@ -50,6 +50,7 @@ struct Mat44
 	Vec4 const GetKBasis4D() const;
 	Vec4 const GetTranslation4D() const;
 	Mat44 const GetOrthonormalInverse() const; //Only works for orthonormal affine matrices
+	Mat44 const GetInverse() const;
 
 	void SetTranslation2D(Vec2 const& translationXY);
 	void SetTranslation3D(Vec3 const& translationXYZ);

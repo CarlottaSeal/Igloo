@@ -13,6 +13,14 @@ struct UIConfig
     std::string m_bitmapFontName;
 };
 
+enum ElementType
+{
+    WIDGET,
+    BUTTON,
+    TEXTBOX,
+    COUNT
+};
+
 class UISystem
 {
 public:
@@ -23,13 +31,16 @@ public:
     void BeginFrame();
     void EndFrame();
 
-    void SetCamera(Camera* camera);
+    void SetCamera(Camera camera);
+
+    void QueueEnableInputNextFrame(UIElement* widget);
+    bool HasWidgetOpened();
 
     Window* GetWindow();
     Renderer* GetRenderer();
     InputSystem* GetInputSystem();
     BitmapFont* GetBitmapFont();
-    Camera* GetCamera();
+    Camera GetCamera();
 
 private:
     UIConfig m_config;
@@ -37,7 +48,9 @@ private:
     InputSystem* m_inputSystem = nullptr;
     BitmapFont* m_bitmapFont = nullptr;
     Renderer* m_renderer = nullptr;
-    Camera* m_currentCamera = nullptr;
+    Camera m_currentCamera;
 
     std::vector<UIElement*> m_uiElements;
+
+    std::vector<UIElement*> m_widgetsToEnableInputNextFrame;
 };

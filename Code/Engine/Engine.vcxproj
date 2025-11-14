@@ -1,6 +1,14 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="DebugNet|Win32">
+      <Configuration>DebugNet</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="DebugNet|x64">
+      <Configuration>DebugNet</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
     <ProjectConfiguration Include="Debug|Win32">
       <Configuration>Debug</Configuration>
       <Platform>Win32</Platform>
@@ -52,6 +60,12 @@
     <WholeProgramOptimization>true</WholeProgramOptimization>
     <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
+  <PropertyGroup Label="Configuration" Condition="'$(Configuration)|$(Platform)'=='DebugNet|Win32'">
+    <PlatformToolset>v143</PlatformToolset>
+  </PropertyGroup>
+  <PropertyGroup Label="Configuration" Condition="'$(Configuration)|$(Platform)'=='DebugNet|x64'">
+    <PlatformToolset>v143</PlatformToolset>
+  </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
   <ImportGroup Label="ExtensionSettings">
   </ImportGroup>
@@ -93,7 +107,7 @@
       <PreprocessorDefinitions>WIN32;_DEBUG;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp17</LanguageStandard>
-      <AdditionalIncludeDirectories>$(SolutionDir)Code/;$(SolutionDir)../Engine/Code/</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)Code/;$(SolutionDir)../Engine/Code/;$(VULKAN_SDK)\Include;$(VULKAN_SDK)\Include</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>
@@ -113,7 +127,7 @@
       <PreprocessorDefinitions>WIN32;NDEBUG;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp17</LanguageStandard>
-      <AdditionalIncludeDirectories>$(SolutionDir)Code/;$(SolutionDir)../Engine/Code/</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)Code/;$(SolutionDir)../Engine/Code/;$(VULKAN_SDK)\Include;$(VULKAN_SDK)\Include</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>
@@ -133,7 +147,8 @@
       <PreprocessorDefinitions>_DEBUG;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp17</LanguageStandard>
-      <AdditionalIncludeDirectories>$(SolutionDir)Code/;$(SolutionDir)../Engine/Code/</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)Code/;$(SolutionDir)../Engine/Code/;$(VULKAN_SDK)\Include;$(VULKAN_SDK)\Include</AdditionalIncludeDirectories>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
     </ClCompile>
     <Link>
       <SubSystem>
@@ -153,7 +168,8 @@
       <PreprocessorDefinitions>NDEBUG;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp17</LanguageStandard>
-      <AdditionalIncludeDirectories>$(SolutionDir)Code/;$(SolutionDir)../Engine/Code/</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)Code/;$(SolutionDir)../Engine/Code/;$(VULKAN_SDK)\Include;$(VULKAN_SDK)\Include</AdditionalIncludeDirectories>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
     </ClCompile>
     <Link>
       <SubSystem>
@@ -166,7 +182,28 @@
       <AdditionalLibraryDirectories>$(SolutionDir)Code/;$(SolutionDir)../Engine/Code/</AdditionalLibraryDirectories>
     </Lib>
   </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='DebugNet|Win32'">
+    <ClCompile>
+      <AdditionalIncludeDirectories>;$(VULKAN_SDK)\Include;$(VULKAN_SDK)\Include</AdditionalIncludeDirectories>
+    </ClCompile>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='DebugNet|x64'">
+    <ClCompile>
+      <AdditionalIncludeDirectories>;$(VULKAN_SDK)\Include;$(VULKAN_SDK)\Include</AdditionalIncludeDirectories>
+    </ClCompile>
+  </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="..\ThirdParty\ImGui\imgui.cpp" />
+    <ClCompile Include="..\ThirdParty\ImGui\imgui_demo.cpp" />
+    <ClCompile Include="..\ThirdParty\ImGui\imgui_draw.cpp" />
+    <ClCompile Include="..\ThirdParty\ImGui\imgui_impl_dx11.cpp" />
+    <ClCompile Include="..\ThirdParty\ImGui\imgui_impl_dx12.cpp" />
+    <ClCompile Include="..\ThirdParty\ImGui\imgui_impl_win32.cpp" />
+    <ClCompile Include="..\ThirdParty\ImGui\imgui_tables.cpp" />
+    <ClCompile Include="..\ThirdParty\ImGui\imgui_widgets.cpp" />
+    <ClCompile Include="..\ThirdParty\ImGui\implot.cpp" />
+    <ClCompile Include="..\ThirdParty\ImGui\implot_items.cpp" />
+    <ClCompile Include="..\ThirdParty\Noise\SmoothNoise.cpp" />
     <ClCompile Include="Audio\AudioSystem.cpp" />
     <ClCompile Include="Core\Clock.cpp" />
     <ClCompile Include="Core\DebugRenderSystem.cpp" />
@@ -178,7 +215,10 @@
     <ClCompile Include="Core\HeatMaps.cpp" />
     <ClCompile Include="Core\Image.cpp" />
     <ClCompile Include="Core\NamedStrings.cpp" />
+    <ClCompile Include="Core\NetworkSystem.cpp" />
     <ClCompile Include="Core\Rgba8.cpp" />
+    <ClCompile Include="Core\StaticMesh.cpp" />
+    <ClCompile Include="Core\StaticMeshUtils.cpp" />
     <ClCompile Include="Core\StringUtils.cpp" />
     <ClCompile Include="Core\Time.cpp" />
     <ClCompile Include="Core\Timer.cpp" />
@@ -190,32 +230,47 @@
     <ClCompile Include="Input\InputSystem.cpp" />
     <ClCompile Include="Input\KeyButtonState.cpp" />
     <ClCompile Include="Input\XboxController.cpp" />
+    <ClCompile Include="Job\JobSystem.cpp" />
     <ClCompile Include="Math\AABB2.cpp" />
     <ClCompile Include="Math\AABB3.cpp" />
     <ClCompile Include="Math\Capsule2D.cpp" />
+    <ClCompile Include="Math\Curve1D.cpp" />
     <ClCompile Include="Math\Disc2D.cpp" />
     <ClCompile Include="Math\EulerAngles.cpp" />
     <ClCompile Include="Math\FloatRange.cpp" />
+    <ClCompile Include="Math\Frustum.cpp" />
     <ClCompile Include="Math\IntRange.cpp" />
     <ClCompile Include="Math\IntVec2.cpp" />
+    <ClCompile Include="Math\IntVec3.cpp" />
+    <ClCompile Include="Math\IntVec4.cpp" />
     <ClCompile Include="Math\Mat44.cpp" />
     <ClCompile Include="Math\MathUtils.cpp" />
     <ClCompile Include="Math\OBB2.cpp" />
     <ClCompile Include="Math\OBB3.cpp" />
     <ClCompile Include="Math\Plane3.cpp" />
     <ClCompile Include="Math\RandomNumberGenerator.cpp" />
+    <ClCompile Include="Math\Sphere.cpp" />
     <ClCompile Include="Math\Spline.cpp" />
     <ClCompile Include="Math\Vec2.cpp" />
     <ClCompile Include="Math\Vec3.cpp" />
     <ClCompile Include="Math\Vec4.cpp" />
     <ClCompile Include="Renderer\BitmapFont.cpp" />
+    <ClCompile Include="Renderer\Cache\CardBVH.cpp" />
+    <ClCompile Include="Renderer\Cache\RadianceCache.cpp" />
+    <ClCompile Include="Renderer\Cache\RadianceCacheManager.cpp" />
+    <ClCompile Include="Renderer\Cache\SurfaceCache.cpp" />
+    <ClCompile Include="Renderer\Cache\SurfaceCard.cpp" />
     <ClCompile Include="Renderer\Camera.cpp" />
     <ClCompile Include="Renderer\ConstantBuffer.cpp" />
-    <ClCompile Include="Renderer\DefaultShadfer.cpp" />
     <ClCompile Include="Renderer\DX11Renderer.cpp" />
     <ClCompile Include="Renderer\DX12Renderer.cpp" />
+    <ClCompile Include="Renderer\DXR\DXRAcceleration.cpp" />
+    <ClCompile Include="Renderer\GI\GBufferData.cpp" />
+    <ClCompile Include="Renderer\GI\GISystem.cpp" />
     <ClCompile Include="Renderer\IndexBuffer.cpp" />
+    <ClCompile Include="Renderer\RenderCommon.cpp" />
     <ClCompile Include="Renderer\Renderer.cpp" />
+    <ClCompile Include="Renderer\SDFTexture3D.cpp" />
     <ClCompile Include="Renderer\Shader.cpp" />
     <ClCompile Include="Renderer\SimpleTriangleFont.cpp" />
     <ClCompile Include="Renderer\SpriteAnimDefinition.cpp" />
@@ -223,6 +278,17 @@
     <ClCompile Include="Renderer\SpriteSheet.cpp" />
     <ClCompile Include="Renderer\Texture.cpp" />
     <ClCompile Include="Renderer\VertexBuffer.cpp" />
+    <ClCompile Include="Save\DataStorage.cpp" />
+    <ClCompile Include="Save\ISerializable.cpp" />
+    <ClCompile Include="Save\RLECompression.cpp" />
+    <ClCompile Include="Save\SaveSystem.cpp" />
+    <ClCompile Include="Scene\BVH.cpp" />
+    <ClCompile Include="Scene\Object\Light\LightObject.cpp" />
+    <ClCompile Include="Scene\Object\Mesh\MeshManager.cpp" />
+    <ClCompile Include="Scene\Object\Mesh\MeshObject.cpp" />
+    <ClCompile Include="Scene\Object\SceneObject.cpp" />
+    <ClCompile Include="Scene\Scene.cpp" />
+    <ClCompile Include="Scene\SDF\SDFGenerator.cpp" />
     <ClCompile Include="ThirdParty\TinyXML2\tinyxml2.cpp" />
     <ClCompile Include="UI\Button.cpp" />
     <ClCompile Include="UI\DialogueSystem.cpp" />
@@ -239,19 +305,34 @@
     <ClInclude Include="..\ThirdParty\fmod\fmod_dsp_effects.h" />
     <ClInclude Include="..\ThirdParty\fmod\fmod_errors.h" />
     <ClInclude Include="..\ThirdParty\fmod\fmod_output.h" />
+    <ClInclude Include="..\ThirdParty\ImGui\imconfig.h" />
+    <ClInclude Include="..\ThirdParty\ImGui\imgui.h" />
+    <ClInclude Include="..\ThirdParty\ImGui\imgui_impl_dx11.h" />
+    <ClInclude Include="..\ThirdParty\ImGui\imgui_impl_dx12.h" />
+    <ClInclude Include="..\ThirdParty\ImGui\imgui_impl_win32.h" />
+    <ClInclude Include="..\ThirdParty\ImGui\imgui_internal.h" />
+    <ClInclude Include="..\ThirdParty\ImGui\implot.h" />
+    <ClInclude Include="..\ThirdParty\ImGui\implot_internal.h" />
+    <ClInclude Include="..\ThirdParty\ImGui\imstb_rectpack.h" />
+    <ClInclude Include="..\ThirdParty\ImGui\imstb_textedit.h" />
+    <ClInclude Include="..\ThirdParty\ImGui\imstb_truetype.h" />
     <ClInclude Include="..\ThirdParty\stb\stb_image.h" />
     <ClInclude Include="Audio\AudioSystem.hpp" />
     <ClInclude Include="Core\Clock.hpp" />
     <ClInclude Include="Core\DebugRenderSystem.hpp" />
     <ClInclude Include="Core\DevConsole.hpp" />
     <ClInclude Include="Core\EngineCommon.hpp" />
+    <ClInclude Include="Core\EngineConfig.h" />
     <ClInclude Include="Core\ErrorWarningAssert.hpp" />
     <ClInclude Include="Core\EventSystem.hpp" />
     <ClInclude Include="Core\FileUtils.hpp" />
     <ClInclude Include="Core\HeatMaps.hpp" />
     <ClInclude Include="Core\Image.hpp" />
     <ClInclude Include="Core\NamedStrings.hpp" />
+    <ClInclude Include="Core\NetworkSystem.h" />
     <ClInclude Include="Core\Rgba8.hpp" />
+    <ClInclude Include="Core\StaticMesh.h" />
+    <ClInclude Include="Core\StaticMeshUtils.h" />
     <ClInclude Include="Core\StringUtils.hpp" />
     <ClInclude Include="Core\Time.hpp" />
     <ClInclude Include="Core\Timer.hpp" />
@@ -263,33 +344,50 @@
     <ClInclude Include="Input\InputSystem.hpp" />
     <ClInclude Include="Input\KeyButtonState.hpp" />
     <ClInclude Include="Input\XboxController.hpp" />
+    <ClInclude Include="Job\JobSystem.h" />
     <ClInclude Include="Math\AABB2.hpp" />
     <ClInclude Include="Math\AABB3.hpp" />
     <ClInclude Include="Math\Capsule2D.h" />
+    <ClInclude Include="Math\Curve1D.h" />
     <ClInclude Include="Math\Disc2D.h" />
     <ClInclude Include="Math\EulerAngles.hpp" />
     <ClInclude Include="Math\FloatRange.hpp" />
+    <ClInclude Include="Math\Frustum.h" />
     <ClInclude Include="Math\IntRange.hpp" />
     <ClInclude Include="Math\IntVec2.hpp" />
+    <ClInclude Include="Math\IntVec3.h" />
+    <ClInclude Include="Math\IntVec4.h" />
     <ClInclude Include="Math\Mat44.hpp" />
     <ClInclude Include="Math\MathUtils.hpp" />
     <ClInclude Include="Math\OBB2.hpp" />
     <ClInclude Include="Math\OBB3.h" />
     <ClInclude Include="Math\Plane3.h" />
     <ClInclude Include="Math\RandomNumberGenerator.hpp" />
+    <ClInclude Include="Math\Sphere.h" />
     <ClInclude Include="Math\Spline.h" />
     <ClInclude Include="Math\Vec2.hpp" />
     <ClInclude Include="Math\Vec3.hpp" />
     <ClInclude Include="Math\Vec4.hpp" />
     <ClInclude Include="Renderer\BitmapFont.hpp" />
+    <ClInclude Include="Renderer\Cache\CardBVH.h" />
+    <ClInclude Include="Renderer\Cache\RadianceCache.h" />
+    <ClInclude Include="Renderer\Cache\RadianceCacheManager.h" />
+    <ClInclude Include="Renderer\Cache\SurfaceCache.h" />
+    <ClInclude Include="Renderer\Cache\SurfaceCacheCommon.h" />
+    <ClInclude Include="Renderer\Cache\SurfaceCard.h" />
     <ClInclude Include="Renderer\Camera.hpp" />
     <ClInclude Include="Renderer\ConstantBuffer.hpp" />
     <ClInclude Include="Renderer\DefaultShader.hpp" />
     <ClInclude Include="Renderer\DX11Renderer.hpp" />
     <ClInclude Include="Renderer\DX12Renderer.hpp" />
+    <ClInclude Include="Renderer\DXR\DXRAcceleration.h" />
+    <ClInclude Include="Renderer\GI\DefaultGBufferShader.h" />
+    <ClInclude Include="Renderer\GI\GBufferData.h" />
+    <ClInclude Include="Renderer\GI\GISystem.h" />
     <ClInclude Include="Renderer\IndexBuffer.hpp" />
     <ClInclude Include="Renderer\RenderCommon.h" />
     <ClInclude Include="Renderer\Renderer.hpp" />
+    <ClInclude Include="Renderer\SDFTexture3D.h" />
     <ClInclude Include="Renderer\Shader.hpp" />
     <ClInclude Include="Renderer\SimpleTriangleFont.hpp" />
     <ClInclude Include="Renderer\SpriteAnimDefinition.hpp" />
@@ -297,6 +395,20 @@
     <ClInclude Include="Renderer\SpriteSheet.hpp" />
     <ClInclude Include="Renderer\Texture.hpp" />
     <ClInclude Include="Renderer\VertexBuffer.hpp" />
+    <ClInclude Include="Save\DataStorage.h" />
+    <ClInclude Include="Save\ISerializable.h" />
+    <ClInclude Include="Save\RLECompression.h" />
+    <ClInclude Include="Save\SaveCommon.h" />
+    <ClInclude Include="Save\SaveSystem.h" />
+    <ClInclude Include="Scene\BVH.h" />
+    <ClInclude Include="Scene\Object\Light\LightObject.h" />
+    <ClInclude Include="Scene\Object\Mesh\MeshManager.h" />
+    <ClInclude Include="Scene\Object\Mesh\MeshObject.h" />
+    <ClInclude Include="Scene\Object\SceneObject.h" />
+    <ClInclude Include="Scene\Scene.h" />
+    <ClInclude Include="Scene\SceneCommon.h" />
+    <ClInclude Include="Scene\SDF\SDFCommon.h" />
+    <ClInclude Include="Scene\SDF\SDFGenerator.h" />
     <ClInclude Include="ThirdParty\TinyXML2\tinyxml2.h" />
     <ClInclude Include="UI\Button.h" />
     <ClInclude Include="UI\DialogueSystem.hpp" />

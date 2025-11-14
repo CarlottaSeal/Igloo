@@ -14,4 +14,7 @@ public:
 	explicit Vec4(float initialX, float initialY, float initialZ, float initialW);
 	Vec4(Vec4 const& copyFrom);
 
+	Vec4 operator-(const Vec4& other) const;
+	Vec4& operator*=(float scalar);
+	Vec4& operator+=(const Vec4& other);
 };

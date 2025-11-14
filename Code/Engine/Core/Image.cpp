@@ -59,6 +59,22 @@ Image::Image(IntVec2 size, Rgba8 color)
 	}
 }
 
+Image::Image(unsigned char* pixelData, int width, int height, int channels)
+{
+	m_dimensions = IntVec2(width, height);
+	m_rgbaTexelsData.resize(width * height);
+
+	for (int i = 0; i < width * height; ++i)
+	{
+		int offset = i * channels;
+		unsigned char r = pixelData[offset + 0];
+		unsigned char g = pixelData[offset + 1];
+		unsigned char b = pixelData[offset + 2];
+		unsigned char a = (channels == 3) ? 255 : pixelData[offset + 3];
+		m_rgbaTexelsData[i] = Rgba8(r, g, b, a);
+	}
+}
+
 Image::~Image()
 {
 }
@@ -100,4 +116,9 @@ void Image::SetTexelColor(IntVec2 const& texelCoords, Rgba8 const& newColor)
 const void* Image::GetRawData() const
 {
 	return m_rgbaTexelsData.data();
+}
+
+void Image::SetName(std::string name)
+{
+	m_imageFilePath = name;
 }

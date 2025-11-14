@@ -7,7 +7,7 @@
 #include "Engine/Input/InputSystem.hpp"
 #include "Engine/Renderer/BitmapFont.hpp"
 
-//extern Renderer* g_theRenderer;
+extern Renderer* g_theRenderer;
 //extern InputSystem* g_theInput;
 
 Button::Button()
@@ -16,8 +16,9 @@ Button::Button()
 }
 
 Button::Button(Widget* parent, AABB2 bound, Rgba8 hoveredColor,Rgba8 textColor, std::string onClickEvent, std::string text,
-    Vec2 textAlignment)
+    Vec2 textAlignment, std::string texturePath)
 {
+    m_type = BUTTON;
     m_parent = parent;
     m_bound = bound;
     m_textColor = textColor;
@@ -28,6 +29,9 @@ Button::Button(Widget* parent, AABB2 bound, Rgba8 hoveredColor,Rgba8 textColor, 
     AddVertsForAABB2D(m_verts, bound, m_originalColor);
     g_theUISystem->GetBitmapFont()->AddVertsForTextInBox2D(m_textVerts, text, bound, bound.GetHeight()*0.25f,
         m_textColor, 0.7f, textAlignment, TextBoxMode::OVERRUN);
+
+    if (texturePath != "")
+        m_texture = g_theRenderer->CreateOrGetTextureFromFile(texturePath.c_str());
 }
 
 Button::~Button()
@@ -53,7 +57,12 @@ void Button::Render() const
         g_theUISystem->GetRenderer()->SetRasterizerMode(RasterizerMode::SOLID_CULL_NONE);
         g_theUISystem->GetRenderer()->SetDepthMode(DepthMode::DISABLED);
         g_theUISystem->GetRenderer()->BindShader(nullptr);
-        g_theUISystem->GetRenderer()->BindTexture(nullptr); //TODO: button texture pictures~
+#ifdef ENGINE_DX11_RENDERER
+        g_theUISystem->GetRenderer()->BindTexture(m_texture); 
+#endif
+#ifdef ENGINE_DX12_RENDERER
+        g_theUISystem->GetRenderer()->SetMaterialConstants(m_texture);
+        #endif
         g_theUISystem->GetRenderer()->SetModelConstants(Mat44(), m_renderedColor);
         g_theUISystem->GetRenderer()->DrawVertexArray(m_verts);
         g_theUISystem->GetRenderer()->SetModelConstants();
@@ -71,7 +80,7 @@ bool Button::UpdateIfClicked()
         if (IsPointInsideAABB2D(mousePos, m_bound))
         {
             SetHovered(true);
-            if (g_theUISystem->GetInputSystem()->WasKeyJustPressed(KEYCODE_LEFT_MOUSE))
+            if (g_theUISystem->GetInputSystem()->WasKeyJustReleased(KEYCODE_LEFT_MOUSE))
             {
                 OnClick();
                 return true;

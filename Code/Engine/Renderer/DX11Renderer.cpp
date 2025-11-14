@@ -29,6 +29,10 @@
 #include "Engine/Math/Mat44.hpp"
 #include "Engine/Window/Window.hpp"
 
+#include "ThirdParty/ImGui/imgui.h"
+#include "ThirdParty/ImGui/imgui_impl_win32.h"
+#include "ThirdParty/ImGui/imgui_impl_dx11.h"
+
 #ifdef ENGINE_DX11_RENDERER
 
 //#pragma comment( lib, "opengl32" )
@@ -107,7 +111,7 @@ void DX11Renderer::Startup()
 	m_pointLightCBO = CreateConstantBuffer(sizeof(PointLightConstants) * 10); //Max: 10 dianguang
 	m_spotLightCBO = CreateConstantBuffer(sizeof(SpotLightConstants) * 4); //Max: 4 sheguang
 #endif
-	m_shadowCBO = CreateConstantBuffer(sizeof(Mat44));
+	m_shadowCBO = CreateConstantBuffer(sizeof(Mat44)); //TODO: 有明显问题
 	m_perFrameCBO = CreateConstantBuffer(sizeof(PerFrameConstants));
 
 	CreateRasterizerStates();
@@ -118,6 +122,8 @@ void DX11Renderer::Startup()
 
 	SetDefaultTexture();
 	BindTexture(m_defaultTexture);
+	BindTexture(m_defaultNormalTexture, 1);
+	BindTexture(m_defaultSpecTexture, 2);
 
 	CreateSampleStates();
 	SetSamplerMode(m_desiredSamplerMode);
@@ -129,6 +135,8 @@ void DX11Renderer::Startup()
 	CreateShadowMapShader();
 	CreateShadowMapResources(); //ShadowMap
 	BindShadowMapTextureAndSampler();
+
+	ImGuiStartUp();
 }
 
 void DX11Renderer::ShutDown()
@@ -136,6 +144,7 @@ void DX11Renderer::ShutDown()
 	/*    HDC hdc = GetDC(static_cast<HWND>(m_windowHandle));
 		wglDeleteContext(wglGetCurrentContext());
 		ReleaseDC(static_cast<HWND>(m_windowHandle), hdc);  */
+	ImGuiShutdown();
 
 	for (Shader* shader : m_loadedShaders)
 	{
@@ -274,6 +283,7 @@ void DX11Renderer::BeginFrame()
 {
 	//Set render target, also set the depth stencil view
 	m_deviceContext->OMSetRenderTargets(1, &m_renderTargetView, m_depthStencilDSV);
+	ImGuiBeginFrame();
 }
 
 void DX11Renderer::EndFrame()
@@ -283,6 +293,8 @@ void DX11Renderer::EndFrame()
 		//SwapBuffers((HDC)m_config.m_window->GetDisplayContext());
 	}
 
+	ImGuiEndFrame();
+	
 	//Present
 	HRESULT hr;
 	//Sleep(1);
@@ -291,6 +303,44 @@ void DX11Renderer::EndFrame()
 	{
 		ERROR_AND_DIE("Device has been lost, application will now terminate.");
 	}
+}
+
+void DX11Renderer::ImGuiStartUp()
+{
+	IMGUI_CHECKVERSION();
+	ImGui::CreateContext();
+	ImGuiIO& io = ImGui::GetIO();
+	io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
+	// 如果你在 DX12 里启了 Docking/Viewports，这里也能开：
+	// io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
+	// io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;
+
+	ImGui::StyleColorsDark();
+
+	// 注意：DX11 后端只需要 Device + DeviceContext
+	// 这些成员在 CreateDeviceAndSwapChain() 里创建过：m_device, m_deviceContext
+	ImGui_ImplWin32_Init(g_theWindow->GetHwnd());
+	ImGui_ImplDX11_Init(m_device, m_deviceContext);
+}
+
+void DX11Renderer::ImGuiBeginFrame()
+{
+	ImGui_ImplDX11_NewFrame();
+	ImGui_ImplWin32_NewFrame();
+	ImGui::NewFrame();
+}
+
+void DX11Renderer::ImGuiEndFrame()
+{
+	ImGui::Render();
+	ImGui_ImplDX11_RenderDrawData(ImGui::GetDrawData());
+}
+
+void DX11Renderer::ImGuiShutdown()
+{
+	ImGui_ImplDX11_Shutdown();
+	ImGui_ImplWin32_Shutdown();
+	ImGui::DestroyContext();
 }
 
 void DX11Renderer::ClearScreen(const Rgba8& clearColor)
@@ -488,45 +538,91 @@ Image* DX11Renderer::CreateImageFromFile(char const* imageFilePath)
 	return new Image(imageFilePath);
 }
 
-Texture* DX11Renderer::CreateTextureFromImage(const Image& image)
+Texture* DX11Renderer::CreateTextureFromImage(const Image& image, bool usingMipmaps)
 {
 	Texture* newTexture = new Texture();
-	newTexture->m_name = image.GetImageFilePath();
-	newTexture->m_dimensions = image.GetDimensions();
+    newTexture->m_name = image.GetImageFilePath();
+    newTexture->m_dimensions = image.GetDimensions();
 
-	D3D11_TEXTURE2D_DESC textureDesc = {};
-	textureDesc.Width = image.GetDimensions().x;
-	textureDesc.Height = image.GetDimensions().y;
-	textureDesc.MipLevels = 1;
-	textureDesc.ArraySize = 1;
-	textureDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
-	textureDesc.SampleDesc.Count = 1;
-	textureDesc.Usage = D3D11_USAGE_IMMUTABLE;
-	textureDesc.BindFlags = D3D11_BIND_SHADER_RESOURCE;
+    int width = image.GetDimensions().x;
+    int height = image.GetDimensions().y;
 
-	D3D11_SUBRESOURCE_DATA textureData;
-	textureData.pSysMem = image.GetRawData();
-	textureData.SysMemPitch = 4 * image.GetDimensions().x;
+    D3D11_TEXTURE2D_DESC textureDesc = {};
+    textureDesc.Width = width;
+    textureDesc.Height = height;
+    textureDesc.ArraySize = 1;
+    textureDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+    textureDesc.SampleDesc.Count = 1;
 
-	HRESULT hr = m_device->CreateTexture2D(&textureDesc, &textureData, &newTexture->m_texture);
-	if (!SUCCEEDED(hr))
-	{
-		ERROR_AND_DIE(Stringf("CreateTextureFromImage failed for image file \"%s\".",
-			image.GetImageFilePath().c_str()));
-	}
+    HRESULT hr;
 
-	hr = m_device->CreateShaderResourceView(newTexture->m_texture, NULL, &newTexture->m_shaderResourceView);
-	if (!SUCCEEDED(hr))
-	{
-		ERROR_AND_DIE(Stringf("CreateShaderResoureView failed for image file \"%s\".",
-			image.GetImageFilePath().c_str()));
-	}
+    if (usingMipmaps)
+    {
+        textureDesc.MipLevels = 0;  
+        textureDesc.Usage = D3D11_USAGE_DEFAULT; 
+        textureDesc.BindFlags = D3D11_BIND_SHADER_RESOURCE | D3D11_BIND_RENDER_TARGET;  
+        textureDesc.MiscFlags = D3D11_RESOURCE_MISC_GENERATE_MIPS;  
 
-	m_loadedTextures.push_back(newTexture);
-	return newTexture;
+        hr = m_device->CreateTexture2D(&textureDesc, nullptr, &newTexture->m_texture);
+        if (!SUCCEEDED(hr))
+        {
+            ERROR_AND_DIE(Stringf("CreateTexture2D failed for image file \"%s\".",
+                image.GetImageFilePath().c_str()));
+        }
+
+        m_deviceContext->UpdateSubresource(
+            newTexture->m_texture,
+            0,                      
+            nullptr,                
+            image.GetRawData(),     
+            width * 4,              
+            0                       
+        );
+
+        D3D11_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
+        srvDesc.Format = textureDesc.Format;
+        srvDesc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE2D;
+        srvDesc.Texture2D.MostDetailedMip = 0;
+        srvDesc.Texture2D.MipLevels = -1;  // -1 = 使用所有可用的 Mipmap 级别
+
+        hr = m_device->CreateShaderResourceView(newTexture->m_texture, &srvDesc, &newTexture->m_shaderResourceView);
+        if (!SUCCEEDED(hr))
+        {
+            ERROR_AND_DIE(Stringf("CreateShaderResourceView failed for image file \"%s\".",
+                image.GetImageFilePath().c_str()));
+        }
+        m_deviceContext->GenerateMips(newTexture->m_shaderResourceView);
+    }
+    else
+    {
+        textureDesc.MipLevels = 1; 
+        textureDesc.Usage = D3D11_USAGE_IMMUTABLE;  
+        textureDesc.BindFlags = D3D11_BIND_SHADER_RESOURCE;
+        textureDesc.MiscFlags = 0;
+
+        D3D11_SUBRESOURCE_DATA textureData;
+        textureData.pSysMem = image.GetRawData();
+        textureData.SysMemPitch = 4 * width;
+
+        hr = m_device->CreateTexture2D(&textureDesc, &textureData, &newTexture->m_texture);
+        if (!SUCCEEDED(hr))
+        {
+            ERROR_AND_DIE(Stringf("CreateTextureFromImage failed for image file \"%s\".",
+                image.GetImageFilePath().c_str()));
+        }
+        hr = m_device->CreateShaderResourceView(newTexture->m_texture, NULL, &newTexture->m_shaderResourceView);
+        if (!SUCCEEDED(hr))
+        {
+            ERROR_AND_DIE(Stringf("CreateShaderResourceView failed for image file \"%s\".",
+                image.GetImageFilePath().c_str()));
+        }
+    }
+
+    m_loadedTextures.push_back(newTexture);
+    return newTexture;
 }
 
-Texture* DX11Renderer::CreateOrGetTextureFromFile(char const* imageFilePath)
+Texture* DX11Renderer::CreateOrGetTextureFromFile(char const* imageFilePath, bool usingMipmaps)
 {
 	// See if we already have this texture previously loaded
 	Texture* existingTexture = GetTextureForFileName(imageFilePath);
@@ -536,11 +632,11 @@ Texture* DX11Renderer::CreateOrGetTextureFromFile(char const* imageFilePath)
 	}
 
 	// Never seen this texture before!  Let's load it.
-	Texture* newTexture = CreateTextureFromFile(imageFilePath);
+	Texture* newTexture = CreateTextureFromFile(imageFilePath, usingMipmaps);
 	return newTexture;
 }
 
-Texture* DX11Renderer::CreateTextureFromFile(char const* imageFilePath)
+Texture* DX11Renderer::CreateTextureFromFile(char const* imageFilePath, bool usingMipmaps )
 {
 	IntVec2 dimensions = IntVec2::ZERO;		// This will be filled in for us to indicate image width & height
 	int bytesPerTexel = 0; // This will be filled in for us to indicate how many color components the image had (e.g. 3=RGB=24bit, 4=RGBA=32bit)
@@ -553,7 +649,7 @@ Texture* DX11Renderer::CreateTextureFromFile(char const* imageFilePath)
 	// Check if the load was successful
 	GUARANTEE_OR_DIE(texelData, Stringf("Failed to load image \"%s\"", imageFilePath));
 
-	Texture* newTexture = CreateTextureFromData(imageFilePath, dimensions, bytesPerTexel, texelData);
+	Texture* newTexture = CreateTextureFromData(imageFilePath, dimensions, bytesPerTexel, texelData, usingMipmaps);
 
 	// Free the raw image texel data now that we've sent a copy of it down to the GPU to be stored in video memory
 	stbi_image_free(texelData);
@@ -574,7 +670,7 @@ Texture* DX11Renderer::GetTextureForFileName(const char* imageFilePath)
 }
 
 //------------------------------------------------------------------------------------------------
-Texture* DX11Renderer::CreateTextureFromData(char const* name, IntVec2 dimensions, int bytesPerTexel, uint8_t* texelData)
+Texture* DX11Renderer::CreateTextureFromData(char const* name, IntVec2 dimensions, int bytesPerTexel, uint8_t* texelData, bool usingMipmaps)
 {
 	// Check if the load was successful
 	GUARANTEE_OR_DIE(texelData, Stringf("CreateTextureFromData failed for \"%s\" - texelData was null!", name));
@@ -598,7 +694,7 @@ Texture* DX11Renderer::CreateTextureFromData(char const* name, IntVec2 dimension
 	}
 	image->m_dimensions = dimensions;
 
-	Texture* newTexture = CreateTextureFromImage(*image);
+	Texture* newTexture = CreateTextureFromImage(*image, usingMipmaps);
 
 	return newTexture;
 
@@ -648,9 +744,19 @@ void DX11Renderer::BindTexture(const Texture* texture, int slot)
 	//{
 	//	glDisable(GL_TEXTURE_2D);
 	//}
-	if (!texture)
+	if (!texture && slot == 0)
 	{
-		BindTexture(m_defaultTexture);
+		BindTexture(m_defaultTexture, 0);
+		return;
+	}
+	if (!texture && slot == 1)
+	{
+		BindTexture(m_defaultNormalTexture, 1);
+		return;
+	}
+	if (!texture && slot == 2)
+	{
+		BindTexture(m_defaultSpecTexture, 2);
 		return;
 	}
 
@@ -963,7 +1069,7 @@ void DX11Renderer::BindIndexBuffer(IndexBuffer* ibo)
 	m_deviceContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 }
 
-void DX11Renderer::DrawIndexBuffer(VertexBuffer* vbo, IndexBuffer* ibo, unsigned int indexCount)
+void DX11Renderer::DrawIndexBuffer(VertexBuffer* vbo, IndexBuffer* ibo, unsigned int indexCount, PrimitiveTopology topology)
 {
 	BindVertexBuffer(vbo);
 	BindIndexBuffer(ibo);
@@ -971,7 +1077,26 @@ void DX11Renderer::DrawIndexBuffer(VertexBuffer* vbo, IndexBuffer* ibo, unsigned
 	SetRasterizerModeIfChanged();
 	SetDepthModeIfChanged();
 	SetSamplerModeIfChanged();
+
+	switch(topology)
+	{
+	case PRIMITIVE_LINES:
+		m_deviceContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_LINELIST);
+		break;
+	case PRIMITIVE_LINE_STRIP:
+		m_deviceContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_LINESTRIP);
+		break;
+	case PRIMITIVE_POINTS:
+		m_deviceContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_POINTLIST);
+		break;
+	default:
+		m_deviceContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+		break;
+	}
+	
 	m_deviceContext->DrawIndexed(indexCount, 0, 0);
+
+	//m_deviceContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 }
 
 void DX11Renderer::CopyCPUToGPU(const void* data, unsigned int size, IndexBuffer*& ibo)
@@ -1361,6 +1486,14 @@ void DX11Renderer::SetDefaultTexture()
 	Image* image = new Image(IntVec2(2, 2), Rgba8::WHITE);
 	image->m_imageFilePath = "Default";
 	m_defaultTexture = CreateTextureFromImage(*image);
+
+	Image* image1 = new Image(IntVec2(2, 2), Rgba8(127, 127, 255));
+	image1->m_imageFilePath = "DefaultNormal";
+	m_defaultNormalTexture = CreateTextureFromImage(*image1); 
+
+	Image* image2 = new Image(IntVec2(2, 2), Rgba8(127, 127, 0));
+	image1->m_imageFilePath = "DefaultSpec";
+	m_defaultSpecTexture = CreateTextureFromImage(*image2);
 }
 
 void DX11Renderer::CreateAndBindDefaultShader()

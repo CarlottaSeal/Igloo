@@ -57,3 +57,15 @@ void EulerAngles::SetFromText(char const* text)
 		throw std::invalid_argument("EulerAngles::SetFromText: Failed to parse float values.");
 	}
 }
+
+bool EulerAngles::operator==(const EulerAngles& other) const
+{
+	return m_yawDegrees == other.m_yawDegrees
+		&& m_pitchDegrees == other.m_pitchDegrees
+		&& m_rollDegrees == other.m_rollDegrees;
+}
+
+bool EulerAngles::operator!=(const EulerAngles& other) const
+{
+	return !(*this == other);
+}

@@ -121,5 +121,10 @@ bool IntVec2::operator!=(const IntVec2& other) const
 			y != other.y;
 }
 
+bool IntVec2::operator<(const IntVec2& rhs) const
+{
+	return (x < rhs.x) || (x == rhs.x && y < rhs.y);
+}
+
 const IntVec2 IntVec2::ZERO = IntVec2(0, 0);
 const IntVec2 IntVec2::NEGATIVEONE = IntVec2(-1, -1);

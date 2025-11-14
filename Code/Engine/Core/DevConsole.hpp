@@ -1,4 +1,6 @@
 #pragma once
+#include <mutex>
+
 #include "Engine/Core/Rgba8.hpp"
 #include "Engine/Core/EventSystem.hpp"
 #include <string>
@@ -82,6 +84,8 @@ protected:
 
 protected:
 	DevConsoleConfig m_config;
+	mutable std::recursive_mutex m_mutex;
+	
 	DevConsoleMode m_mode = DevConsoleMode::HIDDEN;
 	std::vector<DevConsoleLine> m_lines;
 	int m_frameNumber = 0;

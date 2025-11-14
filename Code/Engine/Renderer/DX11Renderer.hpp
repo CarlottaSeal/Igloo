@@ -59,6 +59,11 @@ public:
 	void BeginFrame();
 	void EndFrame();
 
+	void ImGuiStartUp();
+	void ImGuiBeginFrame();
+	void ImGuiEndFrame();
+	void ImGuiShutdown();
+
 	void ClearScreen(const Rgba8& clearColor);
 	void ClearScreen();
 	void BeginCamera(const Camera& camera);
@@ -75,10 +80,10 @@ public:
 	//static void DrawLine(Vec2, Vec2, Rgba8);
 	
 	Image* CreateImageFromFile(char const* imageFilePath);
-	Texture* CreateTextureFromImage(const Image& image);
-	Texture* CreateOrGetTextureFromFile(char const* imageFilePath);
-	Texture* CreateTextureFromData(char const* name, IntVec2 dimensions, int bytesPerTexel, uint8_t* texelData);
-	Texture* CreateTextureFromFile(char const* imageFilePath);
+	Texture* CreateTextureFromImage(const Image& image, bool usingMipmaps = false);
+	Texture* CreateOrGetTextureFromFile(char const* imageFilePath, bool usingMipmaps = false);
+	Texture* CreateTextureFromData(char const* name, IntVec2 dimensions, int bytesPerTexel, uint8_t* texelData, bool usingMipmaps = false);
+	Texture* CreateTextureFromFile(char const* imageFilePath, bool usingMipmaps = false);
 	Texture* GetTextureForFileName(const char* imageFilePath);
 	void BindTexture(const Texture* texture, int slot = 0);
 
@@ -102,7 +107,7 @@ public:
 
 	IndexBuffer* CreateIndexBuffer(const unsigned int size, unsigned int stride);
 	void BindIndexBuffer(IndexBuffer* ibo);
-	void DrawIndexBuffer(VertexBuffer* vbo, IndexBuffer* ibo, unsigned int indexCount);
+	void DrawIndexBuffer(VertexBuffer* vbo, IndexBuffer* ibo, unsigned int indexCount, PrimitiveTopology topology = PRIMITIVE_TRIANGLES);
 	void CopyCPUToGPU(const void* data, unsigned int size, IndexBuffer*& ibo);
 
 	ConstantBuffer* CreateConstantBuffer(const unsigned int size);
@@ -195,7 +200,9 @@ private:
 	BlendMode m_desiredBlendMode = BlendMode::ALPHA;
 	ID3D11BlendState* m_blendStates[(int)(BlendMode::COUNT)] = {};
 
-	const Texture* m_defaultTexture = nullptr;
+	const Texture* m_defaultTexture = nullptr; //default diffuse map
+	const Texture* m_defaultNormalTexture = nullptr; //default normal map
+	const Texture* m_defaultSpecTexture = nullptr;
 
 	SamplerMode m_desiredSamplerMode = SamplerMode::POINT_CLAMP;
 	ID3D11SamplerState* m_samplerState = nullptr;

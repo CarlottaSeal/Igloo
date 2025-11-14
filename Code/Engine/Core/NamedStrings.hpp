@@ -22,6 +22,11 @@ public:
 
 	void DebugPrintContents() const;
 
+	std::string AppendToString();
+	const std::map<std::string, std::string>& GetAllKeyValuePairs() const { return m_keyValuePairs; }
+	bool IsEmpty() const { return m_keyValuePairs.empty();}
+	bool Has(const std::string& key) const;
+
 private:
 	std::map< std::string, std::string > m_keyValuePairs;
 };

@@ -36,8 +36,12 @@ Shader::~Shader()
 #ifdef ENGINE_DX12_RENDERER
 	DX_SAFE_RELEASE(m_dx12VertexShader);
 	DX_SAFE_RELEASE(m_dx12PixelShader);
-	delete m_inputLayoutForVertex;
-	m_inputLayoutForVertex = nullptr;
+	if (m_inputLayout)
+	{
+		delete m_inputLayoutForVertex;
+		m_inputLayoutForVertex = nullptr;
+	}
+	
 #endif
 }
 

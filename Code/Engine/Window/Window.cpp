@@ -1,5 +1,10 @@
 #include "Engine/Window/Window.hpp"
 #include "Engine/Input/InputSystem.hpp"
+
+#include "ThirdParty/ImGui/imgui.h"
+#include "ThirdParty/ImGui/imgui_impl_win32.h"
+#include "ThirdParty/ImGui/imgui_impl_dx12.h"
+
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
 #include "Engine/Core/ErrorWarningAssert.hpp"
@@ -10,9 +15,15 @@ Window* Window::s_mainWindow;
 LRESULT CALLBACK WindowsMessageHandlingProcedure(HWND windowHandle, UINT wmMessageCode, WPARAM wParam, LPARAM lParam)
 {
 	InputSystem* input = Window::s_mainWindow->m_config.m_inputSystem;
+
+	extern IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandler(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
+	if (ImGui_ImplWin32_WndProcHandler(windowHandle, wmMessageCode, wParam, lParam))
+	{
+		return true;
+	}
+
 	switch (wmMessageCode)
 	{
-		// App close requested via "X" button, or right-click "Close Window" on task bar, or "Close" from system menu, or Alt-F4
 	case WM_CLOSE:
 	{
 		//g_theApp->HandleQuitRequested();
@@ -94,6 +105,20 @@ LRESULT CALLBACK WindowsMessageHandlingProcedure(HWND windowHandle, UINT wmMessa
 		}
 		return 0;
 	}
+
+		//Alt+Enter
+	case WM_SYSKEYDOWN:
+		{
+			if (wParam == VK_RETURN && (lParam & 0x60000000) == 0x20000000)
+			{
+				if (Window::s_mainWindow)
+				{
+					Window::s_mainWindow->ToggleFullscreen();
+				}
+				return 0;
+			}
+			break;
+		}
 	}
 
 	// Send back to Windows any unhandled/unconsumed messages we want other apps to see (e.g. play/pause in music apps, etc.)
@@ -104,11 +129,17 @@ Window::Window(WindowConfig const& config)
 	:m_config(config)
 {
 	s_mainWindow = this;
+
+	m_windowedPlacementData = new WINDOWPLACEMENT{ sizeof(WINDOWPLACEMENT) };
 }
 
 Window::~Window()
 {
-	
+	if (m_windowedPlacementData)
+	{
+		delete static_cast<WINDOWPLACEMENT*>(m_windowedPlacementData);
+		m_windowedPlacementData = nullptr;
+	}
 }
 
 void Window::Startup()
@@ -130,9 +161,12 @@ void Window::Shutdown()
 {
 }
 
+void Window::ToggleFullscreen()
+{
+}
+
 WindowConfig const& Window::GetConfig() const
 {
-	// TODO: insert return statement here
 	return m_config;
 }
 
@@ -175,6 +209,11 @@ Vec2 Window::GetNormalizedMouseUV() const
 	return Vec2(cursorX, 1.f - cursorY);
 }
 
+float Window::GetCurrentAspectRatio() const
+{
+	return m_currentAspectRatio;
+}
+
 bool Window::WindowHasFocus() const
 {
 	return GetForegroundWindow() == GetHwnd();
@@ -206,18 +245,14 @@ void Window::CreateOSWindow()
 	WNDCLASSEX windowClassDescription;
 	memset(&windowClassDescription, 0, sizeof(windowClassDescription));
 	windowClassDescription.cbSize = sizeof(windowClassDescription);
-	windowClassDescription.style = CS_OWNDC; // Redraw on move, request own Display Context
+	windowClassDescription.style = CS_OWNDC| CS_HREDRAW | CS_VREDRAW; // Redraw on move, request own Display Context; redraw
 	windowClassDescription.lpfnWndProc = static_cast<WNDPROC>(WindowsMessageHandlingProcedure); // Register our Windows message-handling function
 	windowClassDescription.hInstance = applicationInstanceHandle;
 	windowClassDescription.hIcon = NULL;
 	windowClassDescription.hCursor = NULL;
 	windowClassDescription.lpszClassName = TEXT("Simple Window Class");
 	RegisterClassEx(&windowClassDescription);
-
-	// #SD1ToDo: Add support for full screen mode (requires different window style flags than windowed mode)
-	DWORD const windowStyleFlags = WS_CAPTION | WS_BORDER | WS_SYSMENU | WS_OVERLAPPED;
-	DWORD const windowStyleExFlags = WS_EX_APPWINDOW;
-
+	
 	// Get desktop rect, dimensions, aspect
 	RECT desktopRect;
 	HWND desktopWindowHandle = GetDesktopWindow();
@@ -225,35 +260,71 @@ void Window::CreateOSWindow()
 	float desktopWidth = (float)(desktopRect.right - desktopRect.left);
 	float desktopHeight = (float)(desktopRect.bottom - desktopRect.top);
 	float desktopAspect = desktopWidth / desktopHeight;
+	
+	// DWORD const windowStyleFlags = WS_CAPTION | WS_BORDER | WS_SYSMENU | WS_OVERLAPPED;
+	// DWORD const windowStyleExFlags = WS_EX_APPWINDOW;
+	DWORD windowStyleFlags;
+	DWORD windowStyleExFlags;
+	RECT windowRect;
 
-	// Calculate maximum client size (as some % of desktop size)
-	constexpr float maxClientFractionOfDesktop = 0.90f;
-	float clientWidth = desktopWidth * maxClientFractionOfDesktop;
-	float clientHeight = desktopHeight * maxClientFractionOfDesktop;
-	float clientAspect = m_config.m_aspectRatio;
-	if (clientAspect > desktopAspect)
+	m_isCurrentlyFullscreen = m_config.m_isFullscreen; //store the initial fullScreen or not
+
+	if (m_config.m_isFullscreen)
 	{
-		// Client window has a wider aspect than desktop; shrink client height to match its width
-		clientHeight = clientWidth / clientAspect;
+		windowStyleFlags = WS_POPUP | WS_VISIBLE;
+		windowStyleExFlags = WS_EX_APPWINDOW;
+        
+		windowRect.left = 0;
+		windowRect.top = 0;
+		windowRect.right = (int)desktopWidth;
+		windowRect.bottom = (int)desktopHeight;
+        
+		m_currentAspectRatio = desktopWidth / desktopHeight;
+
+		// // 保存窗口模式的默认位置（居中）
+		// WINDOWPLACEMENT* wp = static_cast<WINDOWPLACEMENT*>(m_windowedPlacementData);
+		// wp->rcNormalPosition.left = (int)((desktopWidth - m_config.m_windowedWidth) * 0.5f);
+		// wp->rcNormalPosition.top = (int)((desktopHeight - m_config.m_windowedHeight) * 0.5f);
+		// wp->rcNormalPosition.right = wp->rcNormalPosition.left + m_config.m_windowedWidth;
+		// wp->rcNormalPosition.bottom = wp->rcNormalPosition.top + m_config.m_windowedHeight;
 	}
 	else
 	{
-		// Client window has a taller aspect than desktop; shrink client width to match its height
-		clientWidth = clientHeight * clientAspect;
+		// raise flags
+		windowStyleFlags = WS_CAPTION | WS_BORDER | WS_SYSMENU | WS_OVERLAPPED; //cannot resize or minimize/maximize window
+		//windowStyleFlags = WS_OVERLAPPEDWINDOW | WS_VISIBLE;
+		windowStyleExFlags = WS_EX_APPWINDOW;
+
+		// Calculate maximum client size (as some % of desktop size)
+		constexpr float maxClientFractionOfDesktop = 0.90f;
+		float clientWidth = desktopWidth * maxClientFractionOfDesktop;
+		float clientHeight = desktopHeight * maxClientFractionOfDesktop;
+		float clientAspect = m_config.m_aspectRatio;
+
+		if (clientAspect > desktopAspect) // Client window has a wider aspect than desktop; shrink client height to match its width
+		{
+			clientHeight = clientWidth / clientAspect;
+		}
+		else // Client window has a taller aspect than desktop; shrink client width to match its height
+		{
+			clientWidth = clientHeight * clientAspect;
+		}
+
+		// Calculate client rect bounds by centering the client area
+		float clientMarginX = 0.5f * (desktopWidth - clientWidth);
+		float clientMarginY = 0.5f * (desktopHeight - clientHeight);
+		RECT clientRect;
+		clientRect.left = (int)clientMarginX;
+		clientRect.right = clientRect.left + (int)clientWidth;
+		clientRect.top = (int)clientMarginY;
+		clientRect.bottom = clientRect.top + (int)clientHeight;
+
+		// Calculate the outer dimensions of the physical window, including frame et. al.
+		windowRect = clientRect;
+		AdjustWindowRectEx(&windowRect, windowStyleFlags, FALSE, windowStyleExFlags);
+        
+		m_currentAspectRatio = m_config.m_aspectRatio;
 	}
-
-	// Calculate client rect bounds by centering the client area
-	float clientMarginX = 0.5f * (desktopWidth - clientWidth);
-	float clientMarginY = 0.5f * (desktopHeight - clientHeight);
-	RECT clientRect;
-	clientRect.left = (int)clientMarginX;
-	clientRect.right = clientRect.left + (int)clientWidth;
-	clientRect.top = (int)clientMarginY;
-	clientRect.bottom = clientRect.top + (int)clientHeight;
-
-	// Calculate the outer dimensions of the physical window, including frame et. al.
-	RECT windowRect = clientRect;
-	AdjustWindowRectEx(&windowRect, windowStyleFlags, FALSE, windowStyleExFlags);
 
 	WCHAR windowTitle[1024];
 	MultiByteToWideChar(GetACP(), 0, m_config.m_windowTitle.c_str(), -1, windowTitle, sizeof(windowTitle) / sizeof(windowTitle[0]));

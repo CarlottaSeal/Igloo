@@ -102,8 +102,13 @@ void DevConsole::Execute(std::string const& consoleCommandText)
 
 		if (g_theDevConsole)
 		{
-			m_commandHistory.push_back(consoleCommandText);
-			m_historyIndex = (int)m_commandHistory.size() - 1;
+			//m_commandHistory.push_back(consoleCommandText);
+			//m_historyIndex = (int)m_commandHistory.size() - 1;
+			{
+				std::lock_guard<std::recursive_mutex> lock(m_mutex);
+				m_commandHistory.push_back(consoleCommandText);
+				m_historyIndex = (int)m_commandHistory.size() - 1;
+			}
 
 			g_theEventSystem->FireEvent(commandName, arguments);
 			g_theDevConsole->m_inputText.clear();
@@ -114,6 +119,8 @@ void DevConsole::Execute(std::string const& consoleCommandText)
 
 void DevConsole::AddLine(Rgba8 const& color, std::string const& text)
 {
+	std::lock_guard<std::recursive_mutex> lock(m_mutex);
+	
 	DevConsoleLine line;
 	line.m_color = color;
 	line.m_text = text;
@@ -162,14 +169,23 @@ void DevConsole::ToggleMode(DevConsoleMode mode)
 
 void DevConsole::Render_Openfull(AABB2 const& bounds, Renderer& renderer, BitmapFont& font, float fontAspect) const
 {
+#ifdef ENGINE_DX12_RENDERER
+	renderer.SetRenderMode(RenderMode::FORWARD);
+#endif
+
 	//begin camera
 	renderer.BeginCamera(*m_config.m_camera);
 	renderer.SetModelConstants(m_config.m_camera->GetCameraToRenderTransform(),Rgba8::WHITE);
 
 	std::vector<Vertex_PCU> consoleQuadVerts;
+#ifdef ENGINE_DX11_RENDERER
 	renderer.BindTexture(nullptr);
+#endif
+	#ifdef ENGINE_DX12_RENDERER
+	renderer.SetMaterialConstants(nullptr, nullptr, nullptr);
+#endif
 	renderer.BindShader(nullptr);
-	
+
 	renderer.SetBlendMode(BlendMode::ALPHA);
 	renderer.SetRasterizerMode(RasterizerMode::SOLID_CULL_NONE);
 	renderer.SetDepthMode(DepthMode::DISABLED);
@@ -229,7 +245,12 @@ void DevConsole::Render_Openfull(AABB2 const& bounds, Renderer& renderer, Bitmap
 		prevBoxMin.y += textDimensions.y;	
 	}
 
+#ifdef ENGINE_DX11_RENDERER
 	renderer.BindTexture(&font.GetTexture());
+#endif
+#ifdef ENGINE_DX12_RENDERER
+	renderer.SetMaterialConstants(&font.GetTexture());
+#endif
 	renderer.BindShader(nullptr);
 
 	renderer.SetBlendMode(BlendMode::ALPHA);

@@ -33,6 +33,8 @@ void EventSystem::EndFrame()
 
 void EventSystem::SubscribeEventCallBackFunction(std::string const& eventName, EventCallBackFunction functionPtr)
 {
+	std::lock_guard<std::recursive_mutex> lock(m_mutex);
+		
 	m_subscriptionListByEventName[eventName].push_back({ functionPtr });
 	if (std::find(m_registeredCommands.begin(), m_registeredCommands.end(), eventName) == m_registeredCommands.end())
 	{
@@ -42,6 +44,7 @@ void EventSystem::SubscribeEventCallBackFunction(std::string const& eventName, E
 
 void EventSystem::UnsubscribeEventCallBackFunction(std::string const& eventName, EventCallBackFunction functionPtr)
 {
+	std::lock_guard<std::recursive_mutex> lock(m_mutex);
 	auto it = m_subscriptionListByEventName.find(eventName);
 	if (it != m_subscriptionListByEventName.end()) 
 	{
@@ -67,32 +70,39 @@ void EventSystem::UnsubscribeEventCallBackFunction(std::string const& eventName,
 
 void EventSystem::FireEvent(std::string const& eventName, EventArgs& args)
 {
-	auto commandIt = std::find(m_registeredCommands.begin(), m_registeredCommands.end(), eventName);
-	if (commandIt == m_registeredCommands.end())
+	// copy arrays to avoid call function when locked
+	SubscriptionList subscriptionsCopy;
+	bool commandExists = false;
+	{
+		std::lock_guard<std::recursive_mutex> lock(m_mutex);
+        
+		auto commandIt = std::find(m_registeredCommands.begin(), m_registeredCommands.end(), eventName);
+		commandExists = (commandIt != m_registeredCommands.end());
+        
+		if (commandExists) {
+			auto it = m_subscriptionListByEventName.find(eventName);
+			if (it != m_subscriptionListByEventName.end())
+			{
+				subscriptionsCopy = it->second; 
+			}
+		}
+	}
+	if (!commandExists)
 	{
 		if (g_theDevConsole)
 		{
 			EventArgs eventArgs;
 			eventArgs.SetValue("warningEvent", eventName);
-			FireEvent("Warning",eventArgs);
-			/*g_theDevConsole->AddLine(g_theDevConsole->ERRORLINE, "Unknown Command: " + eventName);
-			g_theDevConsole->m_inputText.clear();
-			g_theDevConsole->m_insertionPointPos = 0;*/
+			FireEvent("Warning", eventArgs); 
 		}
 		return;
 	}
-
-	auto it = m_subscriptionListByEventName.find(eventName);
-	if (it != m_subscriptionListByEventName.end())
+    
+	for (const EventSubscription& subscription : subscriptionsCopy)
 	{
-		SubscriptionList& subscriptions = it->second;
-		for (const EventSubscription& subscription : subscriptions)
-		{
-			bool consumed = subscription.callback(args);
-			if (consumed)
-			{
-				break;
-			}
+		bool consumed = subscription.callback(args);
+		if (consumed) {
+			break;
 		}
 	}
 }
@@ -100,16 +110,21 @@ void EventSystem::FireEvent(std::string const& eventName, EventArgs& args)
 void EventSystem::FireEvent(std::string const& eventName)
 {
 	EventArgs emptyArgs;
-	auto it = std::find(m_registeredCommands.begin(), m_registeredCommands.end(), eventName);
-	if (it != m_registeredCommands.end())
+	bool commandExists = false;
 	{
-		FireEvent(eventName, emptyArgs);
+		std::lock_guard<std::recursive_mutex> lock(m_mutex);
+		auto it = std::find(m_registeredCommands.begin(), m_registeredCommands.end(), eventName);
+		commandExists = (it != m_registeredCommands.end());
+	}
+    
+	if (commandExists)
+	{
+		FireEvent(eventName, emptyArgs); 
 	}
 	else
 	{
 		if (g_theDevConsole)
 		{
-			//g_theDevConsole->AddLine(g_theDevConsole->ERRORLINE, "Unknown Command: " + eventName);
 			EventArgs eventArgs;
 			eventArgs.SetValue("warningEvent", eventName);
 			FireEvent("Warning", eventArgs);
@@ -119,6 +134,7 @@ void EventSystem::FireEvent(std::string const& eventName)
 
 Strings EventSystem::GetAllRegisteredCommands()
 {
+	std::lock_guard<std::recursive_mutex> lock(m_mutex);
 	return m_registeredCommands;
 }
 

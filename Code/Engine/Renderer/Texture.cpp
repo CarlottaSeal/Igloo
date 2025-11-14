@@ -26,13 +26,14 @@ Texture::Texture()
 
 Texture::~Texture()
 {
+#ifdef ENGINE_DX11_RENDERER
 	DX_SAFE_RELEASE(m_texture);
 	DX_SAFE_RELEASE(m_shaderResourceView);
+#endif
 
 #ifdef ENGINE_DX12_RENDERER
-	DX_SAFE_RELEASE(m_dx12Texture);
 	DX_SAFE_RELEASE(m_textureBufferUploadHeap);
+	DX_SAFE_RELEASE(m_dx12Texture);
 #endif
 
 }
-

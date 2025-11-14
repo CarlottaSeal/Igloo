@@ -608,7 +608,7 @@ public:
 
     static const char* ReadBOM( const char* p, bool* hasBOM );
     // p is the starting location,
-    // the UTF-8 value of the entity will be placed in value, and length filled in.
+    // the UTF-8 m_value of the entity will be placed in m_value, and length filled in.
     static const char* GetCharacterRef( const char* p, char* value, int* length );
     static void ConvertUTF32ToUTF8( unsigned long input, char* output, int* length );
 
@@ -629,7 +629,7 @@ public:
     static bool ToDouble( const char* str, double* value );
 	static bool ToInt64(const char* str, int64_t* value);
     static bool ToUnsigned64(const char* str, uint64_t* value);
-	// Changes what is serialized for a boolean value.
+	// Changes what is serialized for a boolean m_value.
 	// Default to "true" and "false". Shouldn't be changed
 	// unless you have a special testing or compatibility need.
 	// Be careful: static, global, & not thread safe.
@@ -734,7 +734,7 @@ public:
 
     int ChildElementCount() const;
 
-    /** The meaning of 'value' changes for the specific type.
+    /** The meaning of 'm_value' changes for the specific type.
     	@verbatim
     	Document:	empty (NULL is returned, not an empty string)
     	Element:	name of the element
@@ -1133,7 +1133,7 @@ private:
 
 
 
-/** An attribute is a name-value pair. Elements have an arbitrary
+/** An attribute is a name-m_value pair. Elements have an arbitrary
 	number of attributes, each with a unique name.
 
 	@note The attributes are not XMLNodes. You may only query the
@@ -1146,7 +1146,7 @@ public:
     /// The name of the attribute.
     const char* Name() const;
 
-    /// The value of the attribute.
+    /// The m_value of the attribute.
     const char* Value() const;
 
     /// Gets the line number the attribute is in, if the document was parsed from a file.
@@ -1157,8 +1157,8 @@ public:
         return _next;
     }
 
-    /** IntValue interprets the attribute as an integer, and returns the value.
-        If the value isn't an integer, 0 will be returned. There is no error checking;
+    /** IntValue interprets the attribute as an integer, and returns the m_value.
+        If the m_value isn't an integer, 0 will be returned. There is no error checking;
     	use QueryIntValue() if you need error checking.
     */
 	int	IntValue() const {
@@ -1204,7 +1204,7 @@ public:
         return f;
     }
 
-    /** QueryIntValue interprets the attribute as an integer, and returns the value
+    /** QueryIntValue interprets the attribute as an integer, and returns the m_value
     	in the provided parameter. The function will return XML_SUCCESS on success,
     	and XML_WRONG_ATTRIBUTE_TYPE if the conversion is not successful.
     */
@@ -1222,21 +1222,21 @@ public:
     /// See QueryIntValue
     XMLError QueryFloatValue( float* value ) const;
 
-    /// Set the attribute to a string value.
+    /// Set the attribute to a string m_value.
     void SetAttribute( const char* value );
-    /// Set the attribute to value.
+    /// Set the attribute to m_value.
     void SetAttribute( int value );
-    /// Set the attribute to value.
+    /// Set the attribute to m_value.
     void SetAttribute( unsigned value );
-	/// Set the attribute to value.
+	/// Set the attribute to m_value.
 	void SetAttribute(int64_t value);
-    /// Set the attribute to value.
+    /// Set the attribute to m_value.
     void SetAttribute(uint64_t value);
-    /// Set the attribute to value.
+    /// Set the attribute to m_value.
     void SetAttribute( bool value );
-    /// Set the attribute to value.
+    /// Set the attribute to m_value.
     void SetAttribute( double value );
-    /// Set the attribute to value.
+    /// Set the attribute to m_value.
     void SetAttribute( float value );
 
 private:
@@ -1259,7 +1259,7 @@ private:
 };
 
 
-/** The element is a container class. It has a value, the element name,
+/** The element is a container class. It has a m_value, the element name,
 	and can contain other elements, text, comments, and unknowns.
 	Elements also contain an arbitrary number of attributes.
 */
@@ -1284,7 +1284,7 @@ public:
     }
     virtual bool Accept( XMLVisitor* visitor ) const override;
 
-    /** Given an attribute name, Attribute() returns the value
+    /** Given an attribute name, Attribute() returns the m_value
     	for the attribute of that name, or null if none
     	exists. For example:
 
@@ -1292,8 +1292,8 @@ public:
     	const char* value = ele->Attribute( "foo" );
     	@endverbatim
 
-    	The 'value' parameter is normally null. However, if specified,
-    	the attribute will only be returned if the 'name' and 'value'
+    	The 'm_value' parameter is normally null. However, if specified,
+    	the attribute will only be returned if the 'name' and 'm_value'
     	match. This allow you to write code:
 
     	@verbatim
@@ -1309,9 +1309,9 @@ public:
     */
     const char* Attribute( const char* name, const char* value=0 ) const;
 
-    /** Given an attribute name, IntAttribute() returns the value
+    /** Given an attribute name, IntAttribute() returns the m_value
     	of the attribute interpreted as an integer. The default
-        value will be returned if the attribute isn't present,
+        m_value will be returned if the attribute isn't present,
         or if there is an error. (For a method with error
     	checking, see QueryIntAttribute()).
     */
@@ -1333,9 +1333,9 @@ public:
     	XML_SUCCESS, XML_WRONG_ATTRIBUTE_TYPE if the conversion
     	can't be performed, or XML_NO_ATTRIBUTE if the attribute
     	doesn't exist. If successful, the result of the conversion
-    	will be written to 'value'. If not successful, nothing will
-    	be written to 'value'. This allows you to provide default
-    	value:
+    	will be written to 'm_value'. If not successful, nothing will
+    	be written to 'm_value'. This allows you to provide default
+    	m_value:
 
     	@verbatim
     	int value = 10;
@@ -1422,9 +1422,9 @@ public:
 		QueryIntAttribute() and related functions.
 
 		If successful, the result of the conversion
-    	will be written to 'value'. If not successful, nothing will
-    	be written to 'value'. This allows you to provide default
-    	value:
+    	will be written to 'm_value'. If not successful, nothing will
+    	be written to 'm_value'. This allows you to provide default
+    	m_value:
 
     	@verbatim
     	int value = 10;
@@ -1463,45 +1463,45 @@ public:
 		return QueryStringAttribute(name, value);
 	}
 
-	/// Sets the named attribute to value.
+	/// Sets the named attribute to m_value.
     void SetAttribute( const char* name, const char* value )	{
         XMLAttribute* a = FindOrCreateAttribute( name );
         a->SetAttribute( value );
     }
-    /// Sets the named attribute to value.
+    /// Sets the named attribute to m_value.
     void SetAttribute( const char* name, int value )			{
         XMLAttribute* a = FindOrCreateAttribute( name );
         a->SetAttribute( value );
     }
-    /// Sets the named attribute to value.
+    /// Sets the named attribute to m_value.
     void SetAttribute( const char* name, unsigned value )		{
         XMLAttribute* a = FindOrCreateAttribute( name );
         a->SetAttribute( value );
     }
 
-	/// Sets the named attribute to value.
+	/// Sets the named attribute to m_value.
 	void SetAttribute(const char* name, int64_t value) {
 		XMLAttribute* a = FindOrCreateAttribute(name);
 		a->SetAttribute(value);
 	}
 
-    /// Sets the named attribute to value.
+    /// Sets the named attribute to m_value.
     void SetAttribute(const char* name, uint64_t value) {
         XMLAttribute* a = FindOrCreateAttribute(name);
         a->SetAttribute(value);
     }
 
-    /// Sets the named attribute to value.
+    /// Sets the named attribute to m_value.
     void SetAttribute( const char* name, bool value )			{
         XMLAttribute* a = FindOrCreateAttribute( name );
         a->SetAttribute( value );
     }
-    /// Sets the named attribute to value.
+    /// Sets the named attribute to m_value.
     void SetAttribute( const char* name, double value )		{
         XMLAttribute* a = FindOrCreateAttribute( name );
         a->SetAttribute( value );
     }
-    /// Sets the named attribute to value.
+    /// Sets the named attribute to m_value.
     void SetAttribute( const char* name, float value )		{
         XMLAttribute* a = FindOrCreateAttribute( name );
         a->SetAttribute( value );
@@ -1540,7 +1540,7 @@ public:
     		<foo><b>This is text</b></foo>
     	@endverbatim
 
-    	then the value of str would be null. The first child node isn't a text node, it is
+    	then the m_value of str would be null. The first child node isn't a text node, it is
     	another element. From this XML:
     	@verbatim
     		<foo>This is <b>text</b></foo>
@@ -1553,7 +1553,7 @@ public:
     	and concise, SetText() is limited compared to creating an XMLText child
     	and mutating it directly.
 
-    	If the first child of 'this' is a XMLText, SetText() sets its value to
+    	If the first child of 'this' is a XMLText, SetText() sets its m_value to
 		the given string, otherwise it will create a first child that is an XMLText.
 
     	This is a convenient method for setting the text of simple contained text:
@@ -1600,7 +1600,7 @@ public:
     void SetText( float value );
 
     /**
-    	Convenience method to query the value of a child text node. This is probably best
+    	Convenience method to query the m_value of a child text node. This is probably best
     	shown by example. Given you have a document is this form:
     	@verbatim
     		<point>
@@ -1610,7 +1610,7 @@ public:
     	@endverbatim
 
     	The QueryIntText() and similar functions provide a safe and easier way to get to the
-    	"value" of x and y.
+    	"m_value" of x and y.
 
     	@verbatim
     		int x = 0;
@@ -2012,7 +2012,7 @@ inline NodeType* XMLDocument::CreateUnlinkedNode( MemPoolT<PoolElementSize>& poo
 	</Document>
 	@endverbatim
 
-	Assuming you want the value of "attributeB" in the 2nd "Child" element, it's very
+	Assuming you want the m_value of "attributeB" in the 2nd "Child" element, it's very
 	easy to write a *lot* of code that looks like:
 
 	@verbatim

@@ -12,6 +12,10 @@ public:
 
 	void SetFromText(char const* text);
 
+	bool operator==(const EulerAngles& other) const;
+
+	bool operator!=(const EulerAngles& other) const;
+
 public:
 	float m_yawDegrees = 0.f;
 	float m_pitchDegrees = 0.f;

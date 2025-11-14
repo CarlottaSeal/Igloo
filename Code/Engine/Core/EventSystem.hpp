@@ -3,6 +3,8 @@
 #include <string>
 #include <map>
 #include <functional>
+#include <mutex>
+
 #include "NamedStrings.hpp"
 
 class NamedStrings;
@@ -11,7 +13,7 @@ class NamedStrings;
 
 typedef NamedStrings EventArgs;
 //typedef std::function<bool(EventArgs&)> EventCallBackFunction;
-typedef bool (*EventCallBackFunction)(EventArgs& args); // or you may alternatively use the new C++ “using” syntax for type aliasing
+typedef bool (*EventCallBackFunction)(EventArgs& args); // or you may alternatively use the new C++ ï¿½usingï¿½ syntax for type aliasing
 
 struct EventSubscription
 {
@@ -46,6 +48,8 @@ public:
 
 protected:
 	EventSystemConfig m_config;
+
+	mutable std::recursive_mutex m_mutex;
 	std::map<std::string, SubscriptionList> m_subscriptionListByEventName;
 	Strings m_registeredCommands;
 };

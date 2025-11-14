@@ -23,14 +23,43 @@ ConstantBuffer::ConstantBuffer(ID3D11Device* device, size_t size)
 {
 	Create();
 }
-
+#ifdef ENGINE_DX12_RENDERER
 ConstantBuffer::ConstantBuffer(size_t size)
 	:m_size(size)
 {
-#ifdef ENGINE_DX12_RENDERER
+//#ifdef ENGINE_DX12_RENDERER
 	m_constantBufferView = new D3D12_CONSTANT_BUFFER_VIEW_DESC();
-#endif
+//#endif
 }
+
+ConstantBuffer::ConstantBuffer(size_t multiBufferSize, size_t originalSize)
+	:m_maxSize(multiBufferSize)
+	,m_size((originalSize))
+	//,m_frameOffsets(multiBufferSize/originalSize, 0)
+{
+	m_constantBufferView = new D3D12_CONSTANT_BUFFER_VIEW_DESC();
+}
+
+void ConstantBuffer::AppendData(void const* data, size_t size, int currentDraw)
+{
+	size_t alignedSize = AlignUp(size, 256);
+	size_t offset = currentDraw * alignedSize;
+	GUARANTEE_OR_DIE(offset + alignedSize <= m_maxSize, "ConstantBuffer overflow!");
+
+	memcpy(m_mappedPtr + offset, data, size);
+	m_offset = offset;
+}
+
+size_t ConstantBuffer::GetFrameOffset(int frame)
+{
+	return frame * m_size;
+}
+
+void ConstantBuffer::ResetOffset()
+{
+	m_offset = 0;
+}
+#endif
 
 ConstantBuffer::~ConstantBuffer()
 {
@@ -38,8 +67,9 @@ ConstantBuffer::~ConstantBuffer()
 		m_buffer->Release();
 
 #ifdef ENGINE_DX12_RENDERER
-	DX_SAFE_RELEASE( m_dx12ConstantBuffer )
 	delete m_constantBufferView;
+	m_constantBufferView = nullptr;
+	DX_SAFE_RELEASE( m_dx12ConstantBuffer )
 #endif
 }
 
@@ -54,6 +84,7 @@ void ConstantBuffer::Create()
 	HRESULT hr = m_device->CreateBuffer(&bufferDesc, nullptr, &m_buffer);
 	if (!SUCCEEDED(hr))
 	{
+		DebuggerPrintf("CreateBuffer failed with HRESULT: 0x%08X\n", hr);
 		ERROR_AND_DIE("Could not create constant buffer.");
 	}
 }

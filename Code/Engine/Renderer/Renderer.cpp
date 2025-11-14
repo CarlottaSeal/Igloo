@@ -337,32 +337,35 @@ Image* Renderer::CreateImageFromFile(char const* imageFilePath)
 	#endif
 }
 
-Texture* Renderer::CreateTextureFromImage(const Image& image)
+Texture* Renderer::CreateTextureFromImage(const Image& image, bool usingMipmaps)
 {
 #ifdef ENGINE_DX11_RENDERER
-	return m_dx11Renderer->CreateTextureFromImage(image);
+	return m_dx11Renderer->CreateTextureFromImage(image, usingMipmaps);
 #endif
 #ifdef ENGINE_DX12_RENDERER
+	UNUSED(usingMipmaps);
 	return m_dx12Renderer->CreateTextureFromImage(image);
 	#endif
 }
 
-Texture* Renderer::CreateOrGetTextureFromFile(char const* imageFilePath)
+Texture* Renderer::CreateOrGetTextureFromFile(char const* imageFilePath, bool usingMipmaps)
 {
 #ifdef ENGINE_DX11_RENDERER
-	return m_dx11Renderer->CreateOrGetTextureFromFile(imageFilePath);
+	return m_dx11Renderer->CreateOrGetTextureFromFile(imageFilePath, usingMipmaps);
 #endif
 #ifdef ENGINE_DX12_RENDERER
+	UNUSED(usingMipmaps);
 	return m_dx12Renderer->CreateOrGetTextureFromFile(imageFilePath);
 	#endif
 }
 
-Texture* Renderer::CreateTextureFromFile(char const* imageFilePath)
+Texture* Renderer::CreateTextureFromFile(char const* imageFilePath, bool usingMipmaps)
 {
 	#ifdef ENGINE_DX11_RENDERER
-	return m_dx11Renderer->CreateTextureFromFile(imageFilePath);
+	return m_dx11Renderer->CreateTextureFromFile(imageFilePath, usingMipmaps);
 #endif
 #ifdef ENGINE_DX12_RENDERER
+	UNUSED(usingMipmaps);
 	return m_dx12Renderer->CreateTextureFromFile(imageFilePath);
 #endif
 }
@@ -378,7 +381,7 @@ Texture* Renderer::GetTextureForFileName(const char* imageFilePath)
 }
 
 //------------------------------------------------------------------------------------------------
-Texture* Renderer::CreateTextureFromData(char const* name, IntVec2 dimensions, int bytesPerTexel, uint8_t* texelData)
+Texture* Renderer::CreateTextureFromData(char const* name, IntVec2 dimensions, int bytesPerTexel, uint8_t* texelData, bool usingMipmaps)
 {
 #ifdef ENGINE_DX11_RENDERER
 	return m_dx11Renderer->CreateTextureFromData(name, dimensions, bytesPerTexel, texelData);
@@ -388,6 +391,7 @@ Texture* Renderer::CreateTextureFromData(char const* name, IntVec2 dimensions, i
 	UNUSED(dimensions);
 	UNUSED(bytesPerTexel);
 	UNUSED(texelData);
+	UNUSED(usingMipmaps);
  	ERROR_AND_DIE("Cannot use DX12 in this way!")
  	#endif
 }
@@ -516,15 +520,14 @@ void Renderer::BindIndexBuffer(IndexBuffer* ibo)
 	#endif
 }
 
-void Renderer::DrawIndexBuffer(VertexBuffer* vbo, IndexBuffer* ibo, unsigned int indexCount)
+void Renderer::DrawIndexBuffer(VertexBuffer* vbo, IndexBuffer* ibo, unsigned int indexCount, PrimitiveTopology topology)
 {
 #ifdef ENGINE_DX11_RENDERER
-	m_dx11Renderer->DrawIndexBuffer(vbo, ibo, indexCount);
+	m_dx11Renderer->DrawIndexBuffer(vbo, ibo, indexCount, topology);
 #endif
 #ifdef ENGINE_DX12_RENDERER
-	UNUSED(vbo);
-	UNUSED(ibo);
-	UNUSED(indexCount);
+	UNUSED(topology)
+	m_dx12Renderer->DrawIndexedVertexBuffer(vbo, ibo, indexCount);
 	#endif
 }
 
@@ -534,9 +537,7 @@ void Renderer::CopyCPUToGPU(const void* data, unsigned int size, IndexBuffer*& i
 	m_dx11Renderer->CopyCPUToGPU(data, size, ibo);
 #endif
 #ifdef ENGINE_DX12_RENDERER
-	UNUSED(ibo);
-	UNUSED(data);
-	UNUSED(size);
+	m_dx12Renderer->CopyCPUToGPU(data, size, ibo);
 	#endif
 }
 
@@ -557,7 +558,10 @@ void Renderer::CopyCPUToGPU(const void* data, unsigned int size, ConstantBuffer*
 	m_dx11Renderer->CopyCPUToGPU(data, size, cbo);
 #endif
 #ifdef ENGINE_DX12_RENDERER
-	m_dx12Renderer->CopyCPUToGPU(data, size, cbo);
+	//m_dx12Renderer->CopyCPUToGPU(data, size, cbo);
+	UNUSED(data);
+	UNUSED(size);
+	UNUSED(cbo);
 	#endif
 }
 
@@ -663,6 +667,16 @@ void Renderer::SetDepthModeIfChanged()
 #endif
 }
 
+void Renderer::SetRenderMode(RenderMode renderMode)
+{
+#ifdef ENGINE_DX11_RENDERER
+	UNUSED(renderMode);
+#endif
+#ifdef ENGINE_DX12_RENDERER
+	m_dx12Renderer->BeginRenderPass(renderMode);
+#endif
+}
+
 void Renderer::SetGeneralLightConstants(const Rgba8 sunColor, const Vec3& sunNormal, int numLights,
                                         std::vector<Rgba8> colors, std::vector<Vec3> worldPositions, std::vector<Vec3> spotForwards,
                                         std::vector<float> ambiences, std::vector<float> innerRadii, std::vector<float> outerRadii,
@@ -675,17 +689,10 @@ void Renderer::SetGeneralLightConstants(const Rgba8 sunColor, const Vec3& sunNor
 										innerDotThresholds, outerDotThresholds);
 #endif
 #ifdef ENGINE_DX12_RENDERER
-	UNUSED(sunColor);
-	UNUSED(sunNormal);
-	UNUSED(numLights);
-	UNUSED(colors);
-	UNUSED(worldPositions);
-	UNUSED(spotForwards);
-	UNUSED(ambiences);
-	UNUSED(innerRadii);
-	UNUSED(outerRadii);
-	UNUSED(innerDotThresholds);
-	UNUSED(outerDotThresholds);
+	m_dx12Renderer->SetGeneralLightConstants(sunColor, sunNormal, numLights,
+		colors, worldPositions, spotForwards,
+		ambiences, innerRadii, outerRadii,
+		innerDotThresholds, outerDotThresholds);
 	#endif
 }
 
@@ -775,6 +782,18 @@ void Renderer::SetModelConstants(const Mat44& modelToWorldTransform, const Rgba8
 #ifdef ENGINE_DX12_RENDERER
 	m_dx12Renderer->SetModelConstants(modelToWorldTransform, modelColor);
 	#endif
+}
+
+void Renderer::SetMaterialConstants(const Texture* diffuseTex, const Texture* normalTex, const Texture* specularTex)
+{
+#ifdef ENGINE_DX11_RENDERER
+	UNUSED(diffuseTex);
+	UNUSED(normalTex);
+	UNUSED(specularTex);
+#endif
+#ifdef ENGINE_DX12_RENDERER
+	m_dx12Renderer->SetMaterialConstants(diffuseTex, normalTex, specularTex);
+#endif
 }
 
 void Renderer::SetShadowConstants(const Mat44& lightViewProjectionMatrix)

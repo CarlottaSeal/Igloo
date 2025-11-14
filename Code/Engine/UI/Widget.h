@@ -22,11 +22,12 @@ public:
 	void Update();
 	void Render() const;
 	
-	Widget& SetEnabled(bool enabled);
+	void SetEnabled(bool enabled) override;
 	Widget& SetBounds(const AABB2& localBounds);
 	Widget& SetBounds(const Vec2& mins, const Vec2& maxs);
 	Widget& SetText(const char* text, BitmapFont* font, const Rgba8& color = Rgba8::WHITE, float height = 0.f);
 	//Widget& AddChild(Widget& widget, const Vec2& alignment = Vec2::ZERO);
+	void Reset();
 	void AddChild(UIElement& uiElement);
 
 	void SetOnClickEvent(std::string onClickEvent);
@@ -38,7 +39,7 @@ public:
 public:
 	//General
 	std::string m_name;
-	bool m_enabled = true;
+	//bool m_enabled = true;
 	AABB2 m_bounds = AABB2::ZERO_TO_ONE;
 	AABB2 m_textBox = AABB2::ZERO_TO_ONE;
 

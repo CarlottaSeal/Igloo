@@ -39,13 +39,16 @@ VertexBuffer::VertexBuffer(ID3D12Device* device, unsigned int size, unsigned int
 		&props, D3D12_HEAP_FLAG_NONE,
 		&desc, D3D12_RESOURCE_STATE_GENERIC_READ,
 		nullptr, IID_PPV_ARGS(&m_dx12VertexBuffer));
-	GUARANTEE_OR_DIE(SUCCEEDED(hr), "Failed to create ring vertex buffer");
+	GUARANTEE_OR_DIE(SUCCEEDED(hr), "Failed to create vertex buffer");
 
 	m_gpuBaseAddress = m_dx12VertexBuffer->GetGPUVirtualAddress();
 
 	CD3DX12_RANGE readRange(0, 0);
 	hr = m_dx12VertexBuffer->Map(0, &readRange, reinterpret_cast<void**>(&m_mappedPtr));
-	GUARANTEE_OR_DIE(SUCCEEDED(hr), "Failed to map ring vertex buffer");
+	GUARANTEE_OR_DIE(SUCCEEDED(hr), "Failed to map vertex buffer");
+
+	std::wstring name = L"VertexUpload_" + std::to_wstring(reinterpret_cast<uintptr_t>(this));
+	m_dx12VertexBuffer->SetName(name.c_str());
 	
 	m_vertexBufferView.BufferLocation = m_gpuBaseAddress;
 	m_vertexBufferView.SizeInBytes = size;
@@ -88,6 +91,7 @@ VertexBuffer::~VertexBuffer()
     DX_SAFE_RELEASE(m_buffer);
 
 #ifdef ENGINE_DX12_RENDERER
+	m_dx12VertexBuffer->Unmap(0, nullptr); 
 	DX_SAFE_RELEASE(m_dx12VertexBuffer);
 	//delete m_vertexBufferView;
 #endif

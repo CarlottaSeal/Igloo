@@ -165,6 +165,7 @@ Mat44 const Mat44::MakeOrthoProjection(float left, float right, float bottom, fl
 
 Mat44 const Mat44::MakePerspectiveProjection(float fovYDegrees, float aspect, float zNear, float zFar)
 {
+
 	Mat44 perspectMat;
 	////homogeneous
 	//if (zNear == 0.f)
@@ -337,6 +338,57 @@ Mat44 const Mat44::GetOrthonormalInverse() const
 	return inverse;
 }
 
+Mat44 const Mat44::GetInverse() const
+{
+	Mat44 inv;
+	float det;
+
+	float s0 = m_values[0] * m_values[5] - m_values[4] * m_values[1];
+	float s1 = m_values[0] * m_values[6] - m_values[4] * m_values[2];
+	float s2 = m_values[0] * m_values[7] - m_values[4] * m_values[3];
+	float s3 = m_values[1] * m_values[6] - m_values[5] * m_values[2];
+	float s4 = m_values[1] * m_values[7] - m_values[5] * m_values[3];
+	float s5 = m_values[2] * m_values[7] - m_values[6] * m_values[3];
+
+	float c5 = m_values[10] * m_values[15] - m_values[14] * m_values[11];
+	float c4 = m_values[9] * m_values[15] - m_values[13] * m_values[11];
+	float c3 = m_values[9] * m_values[14] - m_values[13] * m_values[10];
+	float c2 = m_values[8] * m_values[15] - m_values[12] * m_values[11];
+	float c1 = m_values[8] * m_values[14] - m_values[12] * m_values[10];
+	float c0 = m_values[8] * m_values[13] - m_values[12] * m_values[9];
+
+	det = s0 * c5 - s1 * c4 + s2 * c3 + s3 * c2 - s4 * c1 + s5 * c0;
+
+	if (abs(det) < 0.0001f)
+	{
+		return Mat44();
+	}
+
+	float invdet = 1.0f / det;
+
+	inv.m_values[0] = (m_values[5] * c5 - m_values[6] * c4 + m_values[7] * c3) * invdet;
+	inv.m_values[1] = (-m_values[1] * c5 + m_values[2] * c4 - m_values[3] * c3) * invdet;
+	inv.m_values[2] = (m_values[13] * s5 - m_values[14] * s4 + m_values[15] * s3) * invdet;
+	inv.m_values[3] = (-m_values[9] * s5 + m_values[10] * s4 - m_values[11] * s3) * invdet;
+
+	inv.m_values[4] = (-m_values[4] * c5 + m_values[6] * c2 - m_values[7] * c1) * invdet;
+	inv.m_values[5] = (m_values[0] * c5 - m_values[2] * c2 + m_values[3] * c1) * invdet;
+	inv.m_values[6] = (-m_values[12] * s5 + m_values[14] * s2 - m_values[15] * s1) * invdet;
+	inv.m_values[7] = (m_values[8] * s5 - m_values[10] * s2 + m_values[11] * s1) * invdet;
+
+	inv.m_values[8] = (m_values[4] * c4 - m_values[5] * c2 + m_values[7] * c0) * invdet;
+	inv.m_values[9] = (-m_values[0] * c4 + m_values[1] * c2 - m_values[3] * c0) * invdet;
+	inv.m_values[10] = (m_values[12] * s4 - m_values[13] * s2 + m_values[15] * s0) * invdet;
+	inv.m_values[11] = (-m_values[8] * s4 + m_values[9] * s2 - m_values[11] * s0) * invdet;
+
+	inv.m_values[12] = (-m_values[4] * c3 + m_values[5] * c1 - m_values[6] * c0) * invdet;
+	inv.m_values[13] = (m_values[0] * c3 - m_values[1] * c1 + m_values[2] * c0) * invdet;
+	inv.m_values[14] = (-m_values[12] * s3 + m_values[13] * s1 - m_values[14] * s0) * invdet;
+	inv.m_values[15] = (m_values[8] * s3 - m_values[9] * s1 + m_values[10] * s0) * invdet;
+
+	return inv;
+}
+
 void Mat44::SetTranslation2D(Vec2 const& translationXY)
 {
     //Set translationZ = 0, translationW = 1
@@ -496,8 +548,7 @@ void Mat44::Orthonormalize_IFwd_JLeft_KUp()
 	m_values[Kx] = kBasis.x; m_values[Ky] = kBasis.y; m_values[Kz] = kBasis.z;
 }
 
-void Mat44::Append(Mat44 const& appendThis) //右乘
-//A append B append C: [A][B][C]
+void Mat44::Append(Mat44 const& appendThis) //右乘 //A append B append C: [A][B][C]
 {
     //multiply on right in column notation/on left in row notation
 	float oldIx = m_values[Ix], oldIy = m_values[Iy], oldIz = m_values[Iz], oldIw = m_values[Iw];

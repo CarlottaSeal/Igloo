@@ -4,6 +4,7 @@
 #include "Game/EngineBuildPreferences.hpp"
 #include "Engine/Renderer/RenderCommon.h"
 #include "Engine/Renderer/Camera.hpp"
+#include "Engine/Core/EngineConfig.h"
 #include "Engine/Core/Rgba8.hpp"
 #include "Engine/Core/Vertex_PCU.hpp"
 #include "Engine/Core/Vertex_PCUTBN.hpp"
@@ -94,6 +95,12 @@ struct ID3D11DepthStencilState;
 struct RendererConfig
 {
     Window* m_window = nullptr;
+	//RenderMode m_mode = RenderMode::FORWARD;
+	bool m_fullscreen = false;
+#ifdef ENGINE_DX12_RENDERER
+    bool m_enableGI = false;
+    //GIConfig m_giConfig;
+#endif
 };
 
 
@@ -142,10 +149,10 @@ public:
     void DrawAABB2(const AABB2& bounds, const Rgba8& color);
 
     Image* CreateImageFromFile(char const* imageFilePath);
-    Texture* CreateTextureFromImage(const Image& image);
-    Texture* CreateOrGetTextureFromFile(char const* imageFilePath);
-    Texture* CreateTextureFromData(char const* name, IntVec2 dimensions, int bytesPerTexel, uint8_t* texelData);
-    Texture* CreateTextureFromFile(char const* imageFilePath);
+    Texture* CreateTextureFromImage(const Image& image, bool usingMipmaps = false);
+    Texture* CreateOrGetTextureFromFile(char const* imageFilePath, bool usingMipmaps = false);
+    Texture* CreateTextureFromData(char const* name, IntVec2 dimensions, int bytesPerTexel, uint8_t* texelData, bool usingMipmaps = false);
+    Texture* CreateTextureFromFile(char const* imageFilePath, bool usingMipmaps = false);
     Texture* GetTextureForFileName(const char* imageFilePath);
     void BindTexture(const Texture* texture, int slot = 0);
    
@@ -170,7 +177,7 @@ public:
 
     IndexBuffer* CreateIndexBuffer(const unsigned int size, unsigned int stride);
     void BindIndexBuffer(IndexBuffer* ibo);
-	void DrawIndexBuffer(VertexBuffer* vbo, IndexBuffer* ibo, unsigned int indexCount);
+	void DrawIndexBuffer(VertexBuffer* vbo, IndexBuffer* ibo, unsigned int indexCount, PrimitiveTopology topology = PRIMITIVE_TRIANGLES);
     void CopyCPUToGPU(const void* data, unsigned int size, IndexBuffer*& ibo);
 	
     ConstantBuffer* CreateConstantBuffer(const unsigned int size);
@@ -194,6 +201,9 @@ public:
     void SetDepthMode(DepthMode depthMode);
     void SetDepthModeIfChanged();
 
+	//RenderMode
+	void SetRenderMode(RenderMode renderMode);
+
 	void SetGeneralLightConstants(Rgba8 sunColor, const Vec3& sunNormal, int numLights, std::vector<Rgba8>colors,
 	                              std::vector<Vec3>worldPositions, std::vector<Vec3>spotForwards, std::vector<float>ambiences,
 	                              std::vector<float>innerRadii, std::vector<float>outerRadii,
@@ -205,6 +215,7 @@ public:
     void SetSpotLightConstants(const std::vector<Vec3>& pos, std::vector<float> cutOff, const std::vector<Vec3>& dir, const std::vector<Rgba8>& color);
 #endif
 	void SetModelConstants(const Mat44& modelToWorldTransform = Mat44(), const Rgba8& modelColor = Rgba8::WHITE);
+	void SetMaterialConstants(const Texture* diffuseTex = nullptr, const Texture* normalTex = nullptr, const Texture* specularTex = nullptr);
     void SetShadowConstants(const Mat44& lightViewProjectionMatrix = Mat44());
 	void SetPerFrameConstants(const float time, const int debugInt, const float debugFloat);
 
@@ -216,9 +227,23 @@ public:
     void CreateShadowMapShader();
     void BindShadowMapTextureAndSampler();
 
-protected:
-    RendererConfig m_config;
+    //Get
+#ifdef ENGINE_DX11_RENDERER
+        DX11Renderer* GetSubRenderer() 
+        {
+            return m_dx11Renderer;
+        }
+#endif
+#ifdef ENGINE_DX12_RENDERER
+		DX12Renderer* GetSubRenderer()
+		{
+			return m_dx12Renderer;
+		}
+#endif
+public:
+		RendererConfig m_config;
 
+protected:
 #ifdef ENGINE_DX11_RENDERER
     DX11Renderer* m_dx11Renderer = nullptr;
 #endif

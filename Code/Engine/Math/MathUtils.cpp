@@ -641,6 +641,70 @@ Vec3 GetNearestPointOnPlane3D(Vec3 const& referencePos, Plane3 const& plane)
 	return referencePos - distance * plane.m_normal;
 }
 
+float DistanceSquaredPointToSegment(const Vec3& p, const Vec3& a, const Vec3& b)
+{
+	Vec3 ab = b - a;
+	Vec3 ap = p - a;
+	float abLen2 = DotProduct3D(ab, ab);
+	if (abLen2 <= 0.f)
+	{
+		return GetDistanceSquared3D(p, a);
+	}
+	float t = DotProduct3D(ap, ab) / abLen2;
+	t = GetClampedZeroToOne(t);
+	Vec3 nearest = a + ab * t;
+	return GetDistanceSquared3D(p, nearest);
+}
+
+float DistanceToTriangle(const Vec3& p, const Vec3& a, const Vec3& b, const Vec3& c)
+{
+	Vec3 ba = b - a, pa = p - a;
+	Vec3 cb = c - b, pb = p - b;
+	Vec3 ac = a - c, pc = p - c;
+	Vec3 nor = CrossProduct3D(ba, ac);
+
+	float sign = SignF(DotProduct3D(CrossProduct3D(ba, nor), pa)) +
+		SignF(DotProduct3D(CrossProduct3D(cb, nor), pb)) +
+		SignF(DotProduct3D(CrossProduct3D(ac, nor), pc));
+
+	if (sign < 2.0f)
+	{
+		float distSq = DotProduct3D(nor, pa) * DotProduct3D(nor, pa) / DotProduct3D(nor, nor);
+		return sqrtf(distSq);
+	}
+
+	float minDistSq = FLT_MAX;
+	minDistSq = MinF(minDistSq, DistanceSquaredPointToSegment(p, a, b));
+	minDistSq = MinF(minDistSq, DistanceSquaredPointToSegment(p, b, c));
+	minDistSq = MinF(minDistSq, DistanceSquaredPointToSegment(p, c, a));
+
+	return sqrtf(minDistSq);
+}
+
+float DistanceSquaredToTriangle(const Vec3& p, const Vec3& a, const Vec3& b, const Vec3& c)
+{
+	Vec3 ba = b - a, pa = p - a;
+	Vec3 cb = c - b, pb = p - b;
+	Vec3 ac = a - c, pc = p - c;
+	Vec3 nor = CrossProduct3D(ba, ac);
+
+	float sign = SignF(DotProduct3D(CrossProduct3D(ba, nor), pa)) +
+		SignF(DotProduct3D(CrossProduct3D(cb, nor), pb)) +
+		SignF(DotProduct3D(CrossProduct3D(ac, nor), pc));
+
+	if (sign < 2.0f)
+	{
+		return DotProduct3D(nor, pa) * DotProduct3D(nor, pa) / DotProduct3D(nor, nor);
+	}
+
+	float minDistSq = FLT_MAX;
+	minDistSq = MinF(minDistSq, DistanceSquaredPointToSegment(p, a, b));
+	minDistSq = MinF(minDistSq, DistanceSquaredPointToSegment(p, b, c));
+	minDistSq = MinF(minDistSq, DistanceSquaredPointToSegment(p, c, a));
+
+	return minDistSq;
+}
+
 bool PushDiscOutOfFixedPoint2D(Vec2& mobileDiscCenter, float discRadius, Vec2 const& fixedPoint)
 {
 	Vec2 displacement = mobileDiscCenter - fixedPoint;
@@ -1956,3 +2020,94 @@ Vec3 GetPerpendicularUnitVector(Vec3 const& normal)
 	else
 		return CrossProduct3D(normal, Vec3(0.f, 1.f, 0.f)).GetNormalized();
 }
+
+size_t AlignUp(size_t value, size_t alignment)
+{
+	return ((value + alignment - 1) / alignment) * alignment;
+}
+
+int FloorDivision(int a, int b)
+{
+	int q = a / b;
+	int r = a % b;
+	if (r != 0 && ((r > 0) != (b > 0)))
+	{
+		--q;
+	}
+	return q;
+}
+
+int FloorToInt(float v)
+{
+	return (int)std::floor(v);
+}
+
+int GetEuclideanMod(int a, int b)
+{
+	int m = a % b;
+	if (m < 0)
+	{
+		m += b;
+	}
+	return m;
+}
+
+float MinF(float a, float b)
+{
+	return (a < b) ? a : b;
+}
+
+float MaxF(float a, float b)
+{
+	return (a > b) ? a : b;
+}
+
+float SignF(float x)
+{
+	if (x > 0.f)
+		return 1.f;
+	if (x < 0.f)
+		return -1.f;
+	return 0.f;
+}
+
+int MinI(int a, int b)
+{
+	return (a < b) ? a : b;
+}
+
+int MaxI(int a, int b)
+{
+	return (a > b) ? a : b;
+}
+
+uint32_t MinUint32(uint32_t a, uint32_t b)
+{
+	return (a < b) ? a : b;
+}
+
+uint32_t MaxUint32(uint32_t a, uint32_t b)
+{
+	return (a > b) ? a : b;
+}
+
+float DiminishingAdd(float a, float b)
+{
+	return 1.0f - (1.0f - a) * (1.0f - b);
+}
+
+float DiminishingAdd(float a, float b, float c)
+{
+	return 1.0f - (1.0f - a) * (1.0f - b) * (1.0f - c);
+}
+
+Vec3 DiminishingAdd(const Vec3& a, const Vec3& b)
+{
+	return Vec3(
+		1.0f - (1.0f - a.x) * (1.0f - b.x),
+		1.0f - (1.0f - a.y) * (1.0f - b.y),
+		1.0f - (1.0f - a.z) * (1.0f - b.z)
+	);
+}
+
+
