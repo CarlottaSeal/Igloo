@@ -101,15 +101,14 @@ AABB3 GetVertexBounds3D(const std::vector<Vertex_PCUTBN>& verts)
 	return bounds;
 }
 
-void AddVertsForDisc2D(std::vector<Vertex_PCU>& verts, Vec2 const& discCenter, float discRadius, Rgba8 const& color)
+void AddVertsForDisc2D(std::vector<Vertex_PCU>& verts, Vec2 const& discCenter, float discRadius, Rgba8 const& color, int numSlides)
 {
-	const int numSides = 32;  
-	const float angleStep = 360.0f / numSides;  
+	const float angleStep = 360.0f / numSlides;  
 
 	//center
 	Vertex_PCU centerVertex(Vec2(discCenter), color, Vec2(0.5f, 0.5f));
 
-	for (int i = 0; i < numSides; ++i) 
+	for (int i = 0; i < numSlides; ++i) 
     {
 		float angle1 = i * angleStep;
 		float angle2 = (i + 1) * angleStep;

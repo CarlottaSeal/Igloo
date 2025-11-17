@@ -15,10 +15,16 @@ struct UIConfig
 
 enum ElementType
 {
-    WIDGET,
     BUTTON,
-    TEXTBOX,
-    COUNT
+   CHECKBOX,
+   SLIDER,
+   TEXT,
+   SPRITE,
+   PANEL,
+   WIDGET,
+   CANVAS,     
+   PROGRESS_BAR, 
+    UI_ELEMENT_COUNT
 };
 
 class UISystem

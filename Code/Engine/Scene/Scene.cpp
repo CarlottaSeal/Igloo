@@ -1006,6 +1006,9 @@ void Scene::EvictLowPriorityCards_Advanced(uint32_t targetTilesToFree)
                    evictedCount, freedTiles, targetTilesToFree);
     
 #endif
+#ifdef ENGINE_DX11_RENDERER
+    UNUSED(targetTilesToFree)
+#endif
 }
 
 void Scene::PrepareStaticGI()
@@ -1034,7 +1037,7 @@ void Scene::RegisterMeshObjectForGI(MeshObject* object)
 
     StaticMesh* mesh = object->GetMesh();
     uint32_t objectID = object->GetID();
-    float objectScale = object->GetScale();
+    //float objectScale = object->GetScale();
 
     std::vector<uint32_t> surfaceCardIDs;
     for (size_t i = 0; i < mesh->m_cardTemplates.size(); i++)

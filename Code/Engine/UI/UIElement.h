@@ -18,6 +18,9 @@ public:
     bool RemoveChild(UIElement* child);
     void SetParent(UIElement* parent);
 
+    void SetActive(bool active) { SetEnabled(active); }
+    bool IsActive() const { return m_isEnabled && m_isInteractive; }
+
     bool IsOtherElementHavingFocus() const;
 
     const AABB2& GetBounds() const { return m_bound; }
@@ -27,6 +30,7 @@ public:
     void SetFocused(bool focused);
     void SetInteractive(bool isInteractive);
     bool IsEnabled();
+    bool IsEnabled() const;
     bool IsInteractive();
     bool HasFocus();
     void ResetStatus(); //except enabled

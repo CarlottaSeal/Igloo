@@ -19,7 +19,7 @@ void TransformVertexArray3D(std::vector<Vertex_PCU>& verts, const Mat44& transfo
 AABB2 GetVertexBounds2D(const std::vector<Vertex_PCU>& verts);
 AABB3 GetVertexBounds3D(const std::vector<Vertex_PCUTBN>& verts);
 
-void AddVertsForDisc2D(std::vector<Vertex_PCU>& verts, Vec2 const& discCenter, float discRadius, Rgba8 const& color);
+void AddVertsForDisc2D(std::vector<Vertex_PCU>& verts, Vec2 const& discCenter, float discRadius, Rgba8 const& color = Rgba8::WHITE, int numSlices = 32);
 void AddVertsForAABB2D(std::vector<Vertex_PCU>& verts, AABB2 const& alignedBox, Rgba8 const& color, AABB2 uv);
 void AddVertsForAABB2D(std::vector<Vertex_PCU>& verts, AABB2 const& alignedBox, Rgba8 const& color);
 void AddVertsForOBB2D(std::vector<Vertex_PCU>& verts, OBB2 const& orientedBox, Rgba8 const& color);

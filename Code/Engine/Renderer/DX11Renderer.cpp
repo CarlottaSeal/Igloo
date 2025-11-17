@@ -583,7 +583,7 @@ Texture* DX11Renderer::CreateTextureFromImage(const Image& image, bool usingMipm
         srvDesc.Format = textureDesc.Format;
         srvDesc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE2D;
         srvDesc.Texture2D.MostDetailedMip = 0;
-        srvDesc.Texture2D.MipLevels = -1;  // -1 = 使用所有可用的 Mipmap 级别
+        srvDesc.Texture2D.MipLevels = (UINT) - 1;  // -1 = 使用所有可用的 Mipmap 级别
 
         hr = m_device->CreateShaderResourceView(newTexture->m_texture, &srvDesc, &newTexture->m_shaderResourceView);
         if (!SUCCEEDED(hr))

@@ -384,7 +384,7 @@ Texture* Renderer::GetTextureForFileName(const char* imageFilePath)
 Texture* Renderer::CreateTextureFromData(char const* name, IntVec2 dimensions, int bytesPerTexel, uint8_t* texelData, bool usingMipmaps)
 {
 #ifdef ENGINE_DX11_RENDERER
-	return m_dx11Renderer->CreateTextureFromData(name, dimensions, bytesPerTexel, texelData);
+	return m_dx11Renderer->CreateTextureFromData(name, dimensions, bytesPerTexel, texelData, usingMipmaps);
 #endif
  #ifdef ENGINE_DX12_RENDERER
 	UNUSED(name);

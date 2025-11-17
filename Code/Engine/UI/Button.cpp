@@ -8,15 +8,13 @@
 #include "Engine/Renderer/BitmapFont.hpp"
 
 extern Renderer* g_theRenderer;
-//extern InputSystem* g_theInput;
 
 Button::Button()
 {
-    // g_theUISystem.
 }
 
-Button::Button(Widget* parent, AABB2 bound, Rgba8 hoveredColor,Rgba8 textColor, std::string onClickEvent, std::string text,
-    Vec2 textAlignment, std::string texturePath)
+Button::Button(Widget* parent, AABB2 bound, Rgba8 hoveredColor, Rgba8 textColor, std::string onClickEvent, 
+               std::string text, Vec2 textAlignment, std::string texturePath)
 {
     m_type = BUTTON;
     m_parent = parent;
@@ -24,6 +22,7 @@ Button::Button(Widget* parent, AABB2 bound, Rgba8 hoveredColor,Rgba8 textColor, 
     m_textColor = textColor;
     m_hoveredColor = hoveredColor;
     
+    // 保持原有的 EventSystem 接口
     SetOnClickEvent(onClickEvent);
 
     AddVertsForAABB2D(m_verts, bound, m_originalColor);
@@ -36,11 +35,12 @@ Button::Button(Widget* parent, AABB2 bound, Rgba8 hoveredColor,Rgba8 textColor, 
 
 Button::~Button()
 {
+    // UIEvent 会自动清理监听器
 }
 
 void Button::Update()
 {
-    if (m_parent->IsEnabled()|| !m_parent)
+    if (m_parent->IsEnabled() || !m_parent)
     {
         UpdateIfClicked();
         UpdateHoveredColor();
@@ -49,7 +49,6 @@ void Button::Update()
 
 void Button::Render() const
 {
-    //UIElement::Render();
     if (m_parent->IsEnabled())
     {
         g_theUISystem->GetRenderer()->BeginCamera(m_parent->m_renderCamera);
@@ -62,7 +61,7 @@ void Button::Render() const
 #endif
 #ifdef ENGINE_DX12_RENDERER
         g_theUISystem->GetRenderer()->SetMaterialConstants(m_texture);
-        #endif
+#endif
         g_theUISystem->GetRenderer()->SetModelConstants(Mat44(), m_renderedColor);
         g_theUISystem->GetRenderer()->DrawVertexArray(m_verts);
         g_theUISystem->GetRenderer()->SetModelConstants();
@@ -75,19 +74,38 @@ bool Button::UpdateIfClicked()
 {
     if (m_parent->IsEnabled())
     {
-        //Vec2 mousePos = m_parent->GetBounds().GetPointAtUV(g_theUISystem->GetInputSystem()->GetCursorNormalizedPosition());
-        Vec2 mousePos = m_parent->m_renderCamera.GetOrthographicBounds().GetPointAtUV(g_theUISystem->GetInputSystem()->GetCursorNormalizedPosition());
+        Vec2 mousePos = m_parent->m_renderCamera.GetOrthographicBounds().GetPointAtUV(
+            g_theUISystem->GetInputSystem()->GetCursorNormalizedPosition());
+        
         if (IsPointInsideAABB2D(mousePos, m_bound))
         {
-            SetHovered(true);
+            // 首次进入悬停状态
+            if (!m_isHovered)
+            {
+                SetHovered(true);
+                m_onHoverUIEvent.Invoke();  // 触发新的 UIEvent
+            }
+            
+            // 按下状态
+            if (g_theUISystem->GetInputSystem()->IsKeyDown(KEYCODE_LEFT_MOUSE))
+            {
+                m_onPressedUIEvent.Invoke();  // 触发新的 UIEvent
+            }
+            
+            // 点击完成
             if (g_theUISystem->GetInputSystem()->WasKeyJustReleased(KEYCODE_LEFT_MOUSE))
             {
-                OnClick();
+                OnClick();  // 会同时触发 EventSystem 和 UIEvent
                 return true;
             }
         }
         else
         {
+            // 离开悬停状态
+            if (m_isHovered)
+            {
+                m_onUnhoverUIEvent.Invoke();  // 触发新的 UIEvent
+            }
             SetHovered(false);
             return false;
         }
@@ -102,9 +120,16 @@ void Button::SetOnClickEvent(std::string const& eventName)
 
 void Button::OnClick()
 {
-    EventArgs eventArgs;
-    eventArgs.SetValue("value", m_onClickEventName);
-    g_theEventSystem->FireEvent(m_onClickEventName, eventArgs);
+    // 1. 触发原有的 EventSystem（向后兼容）
+    if (!m_onClickEventName.empty())
+    {
+        EventArgs eventArgs;
+        eventArgs.SetValue("value", m_onClickEventName);
+        g_theEventSystem->FireEvent(m_onClickEventName, eventArgs);
+    }
+    
+    // 2. 触发新的 UIEvent（新功能）
+    m_onClickUIEvent.Invoke();
 }
 
 void Button::UpdateHoveredColor()
@@ -133,4 +158,24 @@ void Button::SetText(std::string text, Vec2 const& alignment)
 void Button::SetBound(AABB2 bound)
 {
     m_bound = bound;
+}
+
+size_t Button::OnClickEvent(UICallbackFunctionPointer const& callback)
+{
+    return m_onClickUIEvent.AddListener(callback);
+}
+
+size_t Button::OnHoverEvent(UICallbackFunctionPointer const& callback)
+{
+    return m_onHoverUIEvent.AddListener(callback);
+}
+
+size_t Button::OnUnhoverEvent(UICallbackFunctionPointer const& callback)
+{
+    return m_onUnhoverUIEvent.AddListener(callback);
+}
+
+size_t Button::OnPressedEvent(UICallbackFunctionPointer const& callback)
+{
+    return m_onPressedUIEvent.AddListener(callback);
 }

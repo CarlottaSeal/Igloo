@@ -73,6 +73,11 @@ bool UIElement::IsEnabled()
     return m_isEnabled&&m_isInteractive;
 }
 
+bool UIElement::IsEnabled() const
+{
+    return m_isEnabled&&m_isInteractive;
+}
+
 bool UIElement::IsInteractive()
 {
     return m_isInteractive;
