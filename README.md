@@ -20,7 +20,7 @@ Built as the foundation for [LuminaGI](https://github.com/CarlottaSeal/LuminaGI)
 
 ## Features
 
-- **DirectX 12 Renderer** — Deferred GBuffer pipeline, instanced indexed drawing, async compute queue, descriptor heap management, 128 MB ring buffers for vertex/index data
+- **DirectX 12 Renderer** — Deferred GBuffer pipeline, instanced indexed drawing, a dedicated compute queue (currently synchronous, used for one-time SDF baking), descriptor heap management, 128 MB ring buffers for vertex/index data
 - **Real-Time Global Illumination** — Surface cache atlas, screen-space probe system, surface radiosity, voxel irradiance volume, software SDF sphere tracing (per-mesh SDFs are baked at load time using BVH-accelerated point-triangle distance queries; runtime tracing is texture-only, no BVH)
 - **Shadow System** — Directional PCF shadow maps (2048²) + omnidirectional point light cube shadow arrays (512² × 6 faces, up to 4 lights)
 - **DXR Support** — Bottom-level (per-mesh BLAS) and top-level (TLAS) acceleration structures for hardware ray tracing
@@ -89,7 +89,7 @@ Engine/Code/Engine/
 
 ### DX12 Pipeline
 
-The `DX12Renderer` manages the full DirectX 12 device lifecycle: swap chain, command queues (graphics + async compute), descriptor heaps (RTV, DSV, CBV/SRV), per-frame command allocators, and fence-based synchronization.
+The `DX12Renderer` manages the full DirectX 12 device lifecycle: swap chain, command queues (graphics + a dedicated compute queue, used synchronously for SDF baking), descriptor heaps (RTV, DSV, CBV/SRV), per-frame command allocators, and fence-based synchronization.
 
 **Constant buffer layout (shared across all shaders):**
 
