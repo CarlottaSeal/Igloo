@@ -21,9 +21,8 @@ Built as the foundation for [LuminaGI](https://github.com/CarlottaSeal/LuminaGI)
 ## Features
 
 - **DirectX 12 Renderer** — Deferred GBuffer pipeline, instanced indexed drawing, a dedicated compute queue (currently synchronous, used for one-time SDF baking), descriptor heap management, 128 MB ring buffers for vertex/index data
-- **Real-Time Global Illumination** — Surface cache atlas, screen-space probe system, surface radiosity, voxel irradiance volume, software SDF sphere tracing (per-mesh SDFs are baked at load time using BVH-accelerated point-triangle distance queries; runtime tracing is texture-only, no BVH)
+- **Real-Time Global Illumination** — Surface cache atlas, screen-space probe system, surface radiosity, voxel irradiance volume, software distance-field sphere tracing (per-mesh fields are baked at load time on the GPU via BVH-accelerated point-triangle distance queries — **unsigned**, no inside/outside test; runtime tracing is texture-only, no BVH)
 - **Shadow System** — Directional PCF shadow maps (2048²) + omnidirectional point light cube shadow arrays (512² × 6 faces, up to 4 lights)
-- **DXR Support** — Bottom-level (per-mesh BLAS) and top-level (TLAS) acceleration structures for hardware ray tracing
 - **Math Library** — Vec2/3/4, Mat44, AABB2/3, OBB3, Sphere, Frustum, Plane, Capsule, Euler angles, Hermite/Bezier splines, BSP tree, BVH
 - **UI Framework** — Hierarchical element system: Button, Checkbox, Slider, ProgressBar, Text, Sprite, Panel, Canvas, DialogueSystem
 - **Job System** — Worker + I/O thread types, thread-safe pending/executing/completed queues
@@ -32,7 +31,7 @@ Built as the foundation for [LuminaGI](https://github.com/CarlottaSeal/LuminaGI)
 - **Audio** — FMOD integration
 - **Mesh Loading** — OBJ and glTF/GLB via cgltf; BVH construction and per-mesh SDF generation at load time
 - **Particle System** — Configurable emitters with presets (fire, smoke, sparks, explosion)
-- **Dev Tools** — DevConsole, DebugRenderSystem, ImGui + ImPlot integration, 15 GI visualization modes
+- **Dev Tools** — DevConsole, DebugRenderSystem, ImGui + ImPlot integration, 17 GI visualization modes
 
 ---
 
@@ -65,8 +64,8 @@ Engine/Code/Engine/
 │   ├── GI/                 # GI orchestration and GBuffer
 │   │   ├── GISystem                # Top-level GI controller
 │   │   ├── GBufferData             # Albedo, Normal, Material, WorldPos, Depth
-│   │   └── GIVisualization         # 15 debug visualization modes
-│   └── DXR/                # DirectX Ray Tracing acceleration structures
+│   │   └── GIVisualization         # 17 debug visualization modes
+│   └── DXR/                # DXR capability check + AS scaffolding (not wired into rendering; GI is software-traced)
 ├── Save/                   # Multi-format serialization + RLE compression
 ├── Scene/
 │   ├── Scene               # Entity container, GI registration, dirty tracking
@@ -164,7 +163,7 @@ A 64×64 `R32_UINT` **tile→card-index LUT** (16 KB in the default 64-pixel-til
 | 5. Mesh SDF Trace | MeshSDFTrace.hlsl | Short-range SDF sphere tracing (up to 100 units) |
 | 6. Voxel SDF Trace | VoxelSDFTrace.hlsl | Long-range global SDF trace (up to 500 units) |
 | 7. Radiance Composite | RadianceComposite.hlsl | Voxel sample at hit + per-ray distance AO (`saturate(closestHitDist / AO_RADIUS)`, packed in alpha) |
-| 8. Temporal Accumulation | TemporalAccumulation.hlsl | Per-probe ping-pong history blend (α=0.1 EMA), firefly clamp, disocclusion-aware history weight |
+| 8. Temporal Accumulation | TemporalAccumulation.hlsl | Per-probe ping-pong history blend (α≈0.02 base EMA, ramps toward 0.1 under camera motion), firefly clamp, disocclusion-aware history weight |
 | 9. Spatial Filter | SpatialFilter.hlsl | 4-neighbor cross bilateral filter (depth + normal weighted) |
 | 9B. Oct Irradiance | OctIrradiance.hlsl | L2 SH (9 coeff/channel) low-pass projection + reconstruction |
 | 10. Final Gather | FinalGather.hlsl | 5-probe bilateral blend (depth + normal weights) → per-pixel irradiance + AO modulation `lerp(1, ao, AOStrength=0.5)` on indirect only |
@@ -192,7 +191,7 @@ A 64×64 `R32_UINT` **tile→card-index LUT** (16 KB in the default 64-pixel-til
 | Library | Purpose |
 |---------|---------|
 | [ImGui](https://github.com/ocornut/imgui) | Immediate-mode debug GUI |
-| [ImPlot](https://github.com/epezent/implot) | GPU timing graphs via ImGui |
+| [ImPlot](https://github.com/epezent/implot) | CPU / frame-time graphs via ImGui |
 | [TinyXML2](https://github.com/leethomason/tinyxml2) | XML parsing and writing |
 | [stb_image](https://github.com/nothings/stb) | PNG/JPG/BMP image loading and writing |
 | [cgltf](https://github.com/jkuhlmann/cgltf) | glTF 2.0 / GLB mesh loading |
@@ -206,8 +205,8 @@ A 64×64 `R32_UINT` **tile→card-index LUT** (16 KB in the default 64-pixel-til
 
 - **OS**: Windows 10/11
 - **IDE**: Visual Studio 2022
-- **Graphics API**: DirectX 12 (Feature Level 12_0 minimum; 12_2 for full DXR)
-- **GPU**: Any DX12-capable GPU (DXR optional)
+- **Graphics API**: DirectX 12 (Feature Level 12_0 minimum)
+- **GPU**: Any DX12-capable GPU
 - **Audio**: FMOD Studio API (place in `Code/ThirdParty/fmod/`)
 
 Projects using this engine should place it as a sibling directory named `Engine`:
